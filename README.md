@@ -2,6 +2,8 @@
 
 This is a general-purpose action to update generated files on a pull request.
 
+It synchronizes source and generated files as follows:
+
 - Push a change on pull request event
 - Ensure no change on push event
 
@@ -28,13 +30,17 @@ jobs:
       - uses: int128/update-generated-files-action@main
 ```
 
-If there is a change (i.e. difference between source and generated files), this action pushes the change to the branch.
+If there is a change (i.e. `git status` returned any change), this action pushes the change to the branch.
 Otherwise, it does nothing.
 
 This action intentionally fails if there is a change on push event.
 It is a rare case because every changes should be checked via pull requests.
 
 
-## Continuous dependency update
+## Working with Renovate
 
-You can use this action with Dependabot or Renovate to update both source and generated files.
+You can update dependencies using Renovate and this action.
+
+1. Renovate creates a pull request to update a dependency
+1. GitHub Actions triggers a workflow
+1. update-generated-files-action pushes a change if it exists
