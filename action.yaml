@@ -1,0 +1,24 @@
+name: update-generated-files
+description: git push if there is changed file(s)
+inputs:
+  committer-name:
+    description: value for git config user.name
+    required: true
+    default: github-actions[bot]
+  committer-email:
+    description: value for git config user.email
+    required: true
+    default: 41898282+github-actions[bot]@users.noreply.github.com
+  message:
+    description: value for git commit --message
+    required: true
+    default: update-generated-files
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      run: ${{ github.action_path }}/run.sh
+      env:
+        GIT_COMMITTER_NAME: ${{ inputs.committer-name }}
+        GIT_COMMITTER_EMAIL: ${{ inputs.committer-email }}
+        GIT_MESSAGE: ${{ inputs.message }}
