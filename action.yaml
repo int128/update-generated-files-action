@@ -13,10 +13,15 @@ inputs:
     description: value for git commit --message
     required: true
     default: update-generated-files
+outputs:
+  updated-sha:
+    description: sha of a new commit if `git push` is done
+    value: ${{ steps.run.outputs.updated-sha }}
 runs:
   using: composite
   steps:
-    - shell: bash
+    - id: run
+      shell: bash
       run: ${{ github.action_path }}/run.sh
       env:
         GIT_COMMITTER_NAME: ${{ inputs.committer-name }}

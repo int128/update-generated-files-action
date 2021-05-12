@@ -20,3 +20,5 @@ git add .
 git status
 git commit -m "$GIT_MESSAGE"
 git push
+
+echo "::set-output name=updated-sha::$(git rev-parse HEAD)"
