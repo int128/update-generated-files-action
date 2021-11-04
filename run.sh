@@ -9,7 +9,7 @@ if [ -z "$status" ]; then
 fi
 
 if [[ $GITHUB_EVENT_NAME == push ]]; then
-  : "ERROR: $GITHUB_REF is broken because there is difference between sources and generated files"
+  echo "::error::${GITHUB_REF} is broken because there is difference between source and generated files"
   exit 1
 fi
 
