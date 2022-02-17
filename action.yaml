@@ -13,6 +13,10 @@ inputs:
     description: value for git commit --message
     required: true
     default: update-generated-files
+  token:
+    description: GitHub token to create a pull request
+    required: true
+    default: ${{ github.token }}
 outputs:
   updated-sha:
     description: sha of a new commit if `git push` is done
@@ -27,3 +31,4 @@ runs:
         GIT_COMMITTER_NAME: ${{ inputs.committer-name }}
         GIT_COMMITTER_EMAIL: ${{ inputs.committer-email }}
         GIT_MESSAGE: ${{ inputs.message }}
+        GITHUB_TOKEN: ${{ inputs.token }}
