@@ -27,7 +27,7 @@ if [[ $GITHUB_EVENT_NAME == push ]]; then
 
   # create a pull request to follow up
   base_branch="${GITHUB_REF##*/}"
-  topic_branch="update-generated-files-${GITHUB_SHA}"
+  topic_branch="update-generated-files-${GITHUB_SHA}-${GITHUB_RUN_NUMBER}"
   git checkout -b "$topic_branch"
   git add .
   git status
