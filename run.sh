@@ -37,7 +37,6 @@ if [[ $GITHUB_EVENT_NAME == push ]]; then
     --head "$topic_branch" --base "$base_branch" \
     --title "Update generated files" \
     --body "Hi @${GITHUB_ACTOR}, ${base_branch} branch is broken because there is difference between source and generated files at ${GITHUB_SHA}. This PR will fix the diff." \
-    --label 'update-generated-files' \
     --reviewer "$GITHUB_ACTOR" \
     --assignee "$GITHUB_ACTOR"
 
