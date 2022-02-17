@@ -8,14 +8,34 @@ if [ -z "$status" ]; then
   exit 0
 fi
 
-if [[ $GITHUB_EVENT_NAME == push ]]; then
-  echo "::error::${GITHUB_REF} is broken because there is difference between source and generated files"
-  exit 1
-fi
+git diff
 
 git config user.name "$GIT_COMMITTER_NAME"
 git config user.email "$GIT_COMMITTER_EMAIL"
 
+if [[ $GITHUB_EVENT_NAME == push ]]; then
+  echo "::error::${GITHUB_REF} is broken because there is difference between source and generated files"
+
+  # create a pull request to follow up
+  base_branch="${GITHUB_REF##*/}"
+  topic_branch="update-generated-files-${GITHUB_SHA}"
+  git checkout -b "$topic_branch"
+  git add .
+  git status
+  git commit -m "$GIT_MESSAGE"
+  git push origin "$topic_branch"
+  gh pr create \
+    --head "$topic_branch" --base "$base_branch" \
+    --title "Update generated files" \
+    --body "Hi @${GITHUB_ACTOR}, ${base_branch} branch is broken because there is difference between source and generated files at ${GITHUB_SHA}. This PR will fix the diff." \
+    --label 'update-generated-files' \
+    --reviewer "$GITHUB_ACTOR" \
+    --assignee "$GITHUB_ACTOR"
+
+  exit 1
+fi
+
+# append a commit
 git add .
 git status
 git commit -m "$GIT_MESSAGE"
