@@ -16,6 +16,15 @@ git config user.email "$GIT_COMMITTER_EMAIL"
 if [[ $GITHUB_EVENT_NAME == push ]]; then
   echo "::error::${GITHUB_REF} is broken because there is difference between source and generated files"
 
+  # install if needed
+  # https://github.com/cli/cli/blob/trunk/docs/install_linux.md
+  if ! gh version; then
+    curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo dd of=/usr/share/keyrings/githubcli-archive-keyring.gpg
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
+    sudo apt update
+    sudo apt install gh
+  fi
+
   # create a pull request to follow up
   base_branch="${GITHUB_REF##*/}"
   topic_branch="update-generated-files-${GITHUB_SHA}"
