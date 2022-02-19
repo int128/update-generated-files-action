@@ -33,16 +33,20 @@ jobs:
       - uses: int128/update-generated-files-action@v2
 ```
 
-### For pull request events
+### For pull request event
 
-If `git status` returns any change, this action will push the change to the head branch.
+If `git status` returns any change, this action pushes the change to the head branch.
+Otherwise, it does nothing.
+
 You need to explicitly checkout the head branch.
 Note that `actions/checkout@v2` checkouts a merged commit from the default branch.
 
 ### For push or other events
 
-If `git status` returns any change, this action will create a pull request to fix the consistency.
-Here is an example.
+If `git status` returns any change, this action creates a pull request to fix the inconsistency.
+Otherwise, it does nothing.
+
+Here is an example of created pull request.
 
 <img width="1250" alt="image" src="https://user-images.githubusercontent.com/321266/154795860-5bd982b4-2706-4a04-b3c3-2458124853b8.png">
 
@@ -55,32 +59,18 @@ You can update both dependencies and generated files as follows:
 1. GitHub Actions triggers a workflow
 1. This action pushes a change if it exists
 
-If you are using Renovate Approve, you may need to stop the current workflow to prevent the automerge.
-For example,
-
-```yaml
-      - uses: int128/update-generated-files-action@v2
-        id: update-generated-files-action
-      - name: stop this workflow when the branch is updated
-        if: steps.update-generated-files-action.outputs.updated-sha
-        run: exit 99
-```
+If the generated files are inconsistent, automerge will be prevented due to the failure of this action.
 
 
 ## Specification
+
+If `git status` returns any change, this action fails.
 
 ### Inputs
 
 | Name | Default | Description
 |------|----------|------------
 | `token` | `github.token` | GitHub token
-
-
-### Outputs
-
-| Name | Description
-|------|------------
-| `updated-sha` | SHA of a new commit if `git push` is done
 
 
 ## Development

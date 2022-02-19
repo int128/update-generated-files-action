@@ -19,12 +19,13 @@ export const run = async (inputs: Inputs): Promise<void> => {
   await exec.exec('git', ['config', 'user.email', '41898282+github-actions[bot]@users.noreply.github.com'])
 
   if (github.context.eventName === 'pull_request') {
-    return await updateBranch()
+    await updateBranch()
+    throw new Error(`Inconsistent generated files in pull request`)
   }
 
   const octokit = github.getOctokit(inputs.token)
   await createPullRequest(octokit)
-  throw new Error(`Inconsistency of generated files in ${github.context.ref}`)
+  throw new Error(`Inconsistent generated files in ${github.context.ref}`)
 }
 
 const updateBranch = async () => {
@@ -33,11 +34,6 @@ const updateBranch = async () => {
   await exec.exec('git', ['add', '.'])
   await exec.exec('git', ['commit', '-m', 'Fix consistency of generated files'])
   await exec.exec('git', ['push'])
-
-  const headOutput = await exec.getExecOutput('git', ['rev-parse', 'HEAD'])
-  const headSHA = headOutput.stdout.trim()
-  core.info(`head SHA is ${headSHA}`)
-  core.setOutput('updated-sha', headSHA)
 }
 
 const createPullRequest = async (octokit: Octokit) => {
