@@ -1,18 +1,15 @@
 # update-generated-files-action [![ts](https://github.com/int128/update-generated-files-action/actions/workflows/ts.yaml/badge.svg)](https://github.com/int128/update-generated-files-action/actions/workflows/ts.yaml)
 
-This is a general-purpose action to update generated files on a pull request.
+This is a general-purpose action to keep consistency of the generated files.
+For example,
 
-It synchronizes source and generated files as follows:
-
-- Push a change on pull request event
-- Ensure no change on push event
+- Code formatter (e.g., Prettier)
+- Code generator (e.g., OpenAPI, gRPC or GraphQL)
 
 
 ## Getting Started
 
-This action is designed to work on a head branch of pull request.
-
-Here is an example.
+Create a workflow as follows:
 
 ```yaml
 on:
@@ -31,30 +28,43 @@ jobs:
 
       # something to regenerate files
       - run: yarn
-      - run: yarn generate
+      - run: yarn format
 
       - uses: int128/update-generated-files-action@v2
 ```
 
 ### For pull request events
 
-If there is a change (i.e. `git status` returned any change), this action pushes the change to the head branch.
-Otherwise, it does nothing.
-
-You need to explicitly checkout the head branch by setting `ref: ${{ github.head_ref }}`.
+If `git status` returns any change, this action will push the change to the head branch.
+You need to explicitly checkout the head branch.
+Note that `actions/checkout@v2` checkouts a merged commit from the default branch.
 
 ### For push or other events
 
-This action creates a pull request to follow up the difference.
+If `git status` returns any change, this action will create a pull request to fix the consistency.
+Here is an example.
+
+<img width="1250" alt="image" src="https://user-images.githubusercontent.com/321266/154795860-5bd982b4-2706-4a04-b3c3-2458124853b8.png">
 
 
 ## Working with Renovate
 
-You can update dependencies using Renovate and this action.
+You can update both dependencies and generated files as follows:
 
 1. Renovate creates a pull request to update a dependency
 1. GitHub Actions triggers a workflow
-1. update-generated-files-action pushes a change if it exists
+1. This action pushes a change if it exists
+
+If you are using Renovate Approve, you may need to stop the current workflow to prevent the automerge.
+For example,
+
+```yaml
+      - uses: int128/update-generated-files-action@v2
+        id: update-generated-files-action
+      - name: stop this workflow when the branch is updated
+        if: steps.update-generated-files-action.outputs.updated-sha
+        run: exit 99
+```
 
 
 ## Specification
