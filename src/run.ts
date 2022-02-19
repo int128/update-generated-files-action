@@ -18,7 +18,7 @@ export const run = async (inputs: Inputs): Promise<void> => {
   const octokit = github.getOctokit(inputs.token)
   const { data: user } = await octokit.rest.users.getAuthenticated()
   await exec.exec('git', ['config', 'user.name', user.login])
-  await exec.exec('git', ['config', 'user.email', user.email])
+  await exec.exec('git', ['config', 'user.email', user.email ?? 'github-actions@github.com'])
 
   if (github.context.eventName !== 'pull_request') {
     core.info(`Creating a pull request to follow up the difference`)
