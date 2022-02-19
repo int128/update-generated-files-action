@@ -1,10 +1,27 @@
-name: typescript-action
-description: Template of TypeScript Action
+name: update-generated-files
+description: git push if there is changed file(s)
 
 inputs:
-  name:
-    description: example input
+  committer-name:
+    description: value for git config user.name
     required: true
+    default: github-actions[bot]
+  committer-email:
+    description: value for git config user.email
+    required: true
+    default: 41898282+github-actions[bot]@users.noreply.github.com
+  message:
+    description: value for git commit --message
+    required: true
+    default: update-generated-files
+  token:
+    description: GitHub token to create a pull request
+    required: true
+    default: ${{ github.token }}
+
+outputs:
+  updated-sha:
+    description: sha of a new commit if `git push` is done
 
 runs:
   using: 'node16'
