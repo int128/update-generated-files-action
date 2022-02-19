@@ -18,12 +18,17 @@ export const run = async (inputs: Inputs): Promise<void> => {
   await exec.exec('git', ['config', 'user.name', 'github-actions'])
   await exec.exec('git', ['config', 'user.email', '41898282+github-actions[bot]@users.noreply.github.com'])
 
-  if (github.context.eventName !== 'pull_request') {
-    core.info(`Creating a pull request to follow up the difference`)
-    const octokit = github.getOctokit(inputs.token)
-    await createFollowUpPullRequest(octokit)
-    throw new Error(`${github.context.ref} is broken because there is difference between source and generated files`)
+  if (github.context.eventName === 'pull_request') {
+    return await updateBranch()
   }
+
+  const octokit = github.getOctokit(inputs.token)
+  await createPullRequest(octokit)
+  throw new Error(`Inconsistency of generated files in ${github.context.ref}`)
+}
+
+const updateBranch = async () => {
+  core.info(`Updating the current branch`)
 
   await exec.exec('git', ['add', '.'])
   await exec.exec('git', ['commit', '-m', 'Fix consistency of generated files'])
@@ -35,14 +40,19 @@ export const run = async (inputs: Inputs): Promise<void> => {
   core.setOutput('updated-sha', headSHA)
 }
 
-const createFollowUpPullRequest = async (octokit: Octokit) => {
+const createPullRequest = async (octokit: Octokit) => {
   const [, , base] = github.context.ref.split('/')
+  core.info(`Creating a pull request for ${base} branch`)
+
   const head = `update-generated-files-${github.context.sha}-${github.context.runNumber}`
   const body = `Hi @${github.context.actor},
 
-${base} branch is inconsistency,
-because there is difference between source and generated files at ${github.context.sha}.
-This pull request will fix the inconsistency.
+This pull request will fix the consistency of generated files.
+See the change for details.
+
+----
+
+Created by [GitHub Actions](${github.context.serverUrl}/${github.context.repo.owner}/${github.context.repo.repo}/actions/runs/${github.context.runId}) at ${github.context.ref}.
 `
 
   await exec.exec('git', ['checkout', '-b', head])
