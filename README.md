@@ -15,6 +15,12 @@ This action is designed to work on a head branch of pull request.
 Here is an example.
 
 ```yaml
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
 jobs:
   generate:
     runs-on: ubuntu-latest
@@ -30,11 +36,16 @@ jobs:
       - uses: int128/update-generated-files-action@v2
 ```
 
-If there is a change (i.e. `git status` returned any change), this action pushes the change to the branch.
+### For pull request events
+
+If there is a change (i.e. `git status` returned any change), this action pushes the change to the head branch.
 Otherwise, it does nothing.
 
-This action intentionally fails if there is a change on push event.
-It is a rare case because every changes should be checked via pull requests.
+You need to explicitly checkout the head branch by setting `ref: ${{ github.head_ref }}`.
+
+### For push or other events
+
+This action creates a pull request to follow up the difference.
 
 
 ## Working with Renovate
