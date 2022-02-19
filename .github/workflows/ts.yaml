@@ -36,5 +36,7 @@ jobs:
       - run: yarn build
       - run: yarn package
 
-      - name: e2e-test
+      - id: update-generated-files
+        name: update-generated-files
         uses: ./
+      - run: echo "updated-sha=${{ steps.update-generated-files.outputs.updated-sha }}"
