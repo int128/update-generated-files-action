@@ -28,7 +28,7 @@ export const run = async (inputs: Inputs): Promise<void> => {
   await exec.exec('git', ['add', '.'])
   await exec.exec('git', ['status'])
   await exec.exec('git', ['commit', '-m', inputs.message])
-  await exec.exec('git', ['push'])
+  await exec.exec('git', ['push', 'origin', `HEAD:${github.context.ref}`])
 }
 
 const createFollowUpPullRequest = async (inputs: Inputs) => {
