@@ -4,7 +4,7 @@ This is a general-purpose action to keep consistency of the generated files.
 For example,
 
 - Code formatter (e.g., Prettier)
-- Code generator (e.g., OpenAPI or GraphQL)
+- Code generator (e.g., OpenAPI, gRPC or GraphQL)
 
 
 ## Getting Started
@@ -39,16 +39,6 @@ If `git status` returns any change, this action will push the change to the head
 You need to explicitly checkout the head branch.
 Note that `actions/checkout@v2` checkouts a merged commit from the default branch.
 
-You can stop the current workflow, like:
-
-```yaml
-      - uses: int128/update-generated-files-action@v2
-        id: update-generated-files-action
-      - name: stop this workflow when the branch is updated
-        if: steps.update-generated-files-action.outputs.updated-sha
-        run: exit 99
-```
-
 ### For push or other events
 
 If `git status` returns any change, this action will create a pull request to fix the consistency.
@@ -64,6 +54,17 @@ You can update both dependencies and generated files as follows:
 1. Renovate creates a pull request to update a dependency
 1. GitHub Actions triggers a workflow
 1. This action pushes a change if it exists
+
+If you are using Renovate Approve, you may need to stop the current workflow to prevent the automerge.
+For example,
+
+```yaml
+      - uses: int128/update-generated-files-action@v2
+        id: update-generated-files-action
+      - name: stop this workflow when the branch is updated
+        if: steps.update-generated-files-action.outputs.updated-sha
+        run: exit 99
+```
 
 
 ## Specification
