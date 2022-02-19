@@ -39,8 +39,10 @@ const createFollowUpPullRequest = async (inputs: Inputs) => {
   const [, , base] = github.context.ref.split('/')
   const head = `update-generated-files-${github.context.sha}-${github.context.runNumber}`
   const body = `Hi @${github.context.actor},
-${base} branch is broken because there is difference between source and generated files at ${github.context.sha}.
-This pull request will fix the difference.
+
+${base} branch is inconsistency,
+because there is difference between source and generated files at ${github.context.sha}.
+This pull request will fix the inconsistency.
 `
 
   await exec.exec('git', ['checkout', '-b', head])
@@ -54,7 +56,7 @@ This pull request will fix the difference.
     ...github.context.repo,
     base,
     head,
-    title: 'Update generated files',
+    title: `Fix inconsistency of ${base} branch`,
     body,
   })
   core.info(`Created ${pull.html_url}`)
