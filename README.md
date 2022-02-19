@@ -63,9 +63,6 @@ You can update dependencies using Renovate and this action.
 
 | Name | Default | Description
 |------|----------|------------
-| `committer-name` | `github-actions[bot]` | A value for git config user.name
-| `committer-email` | see action.yaml | A value for git config user.email
-| `message` | `update-generated-files` | A value for git commit --message
 | `token` | `github.token` | GitHub token
 
 
