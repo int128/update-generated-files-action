@@ -2,7 +2,7 @@ name: ts
 
 on:
   push:
-    branches: [main]
+    branches: [main-v2]
     paths:
       - src/**
       - tests/**
@@ -10,7 +10,6 @@ on:
       - action.yaml
       - .github/workflows/ts.yaml
   pull_request:
-    branches: [main]
     paths:
       - src/**
       - tests/**
