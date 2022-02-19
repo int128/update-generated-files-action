@@ -1,11 +1,11 @@
 import * as core from '@actions/core'
 import * as exec from '@actions/exec'
 import * as github from '@actions/github'
+import { GitHub } from '@actions/github/lib/utils'
+
+type Octokit = InstanceType<typeof GitHub>
 
 type Inputs = {
-  comitterName: string
-  comitterEmail: string
-  message: string
   token: string
 }
 
@@ -15,18 +15,20 @@ export const run = async (inputs: Inputs): Promise<void> => {
     return
   }
 
-  await exec.exec('git', ['config', 'user.name', inputs.comitterName])
-  await exec.exec('git', ['config', 'user.email', inputs.comitterEmail])
+  const octokit = github.getOctokit(inputs.token)
+  const { data: user } = await octokit.rest.users.getAuthenticated()
+  await exec.exec('git', ['config', 'user.name', user.login])
+  await exec.exec('git', ['config', 'user.email', user.email])
 
   if (github.context.eventName !== 'pull_request') {
     core.info(`Creating a pull request to follow up the difference`)
-    await createFollowUpPullRequest(inputs)
+    await createFollowUpPullRequest(octokit)
     throw new Error(`${github.context.ref} is broken because there is difference between source and generated files`)
   }
 
   await exec.exec('git', ['add', '.'])
   await exec.exec('git', ['status'])
-  await exec.exec('git', ['commit', '-m', inputs.message])
+  await exec.exec('git', ['commit', '-m', 'Fix inconsistency between source and generated files'])
   await exec.exec('git', ['push'])
 
   const headOutput = await exec.getExecOutput('git', ['rev-parse', 'HEAD'])
@@ -35,7 +37,7 @@ export const run = async (inputs: Inputs): Promise<void> => {
   core.setOutput('updated-sha', headSHA)
 }
 
-const createFollowUpPullRequest = async (inputs: Inputs) => {
+const createFollowUpPullRequest = async (octokit: Octokit) => {
   const [, , base] = github.context.ref.split('/')
   const head = `update-generated-files-${github.context.sha}-${github.context.runNumber}`
   const body = `Hi @${github.context.actor},
@@ -48,10 +50,9 @@ This pull request will fix the inconsistency.
   await exec.exec('git', ['checkout', '-b', head])
   await exec.exec('git', ['add', '.'])
   await exec.exec('git', ['status'])
-  await exec.exec('git', ['commit', '-m', inputs.message])
+  await exec.exec('git', ['commit', '-m', 'Fix inconsistency between source and generated files'])
   await exec.exec('git', ['push', 'origin', head])
 
-  const octokit = github.getOctokit(inputs.token)
   const { data: pull } = await octokit.rest.pulls.create({
     ...github.context.repo,
     base,
