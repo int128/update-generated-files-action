@@ -15,7 +15,8 @@ export const run = async (inputs: Inputs): Promise<void> => {
     return
   }
 
-  await exec.exec('git', ['config', 'user.name', inputs.comitterName])
+  await exec.exec('git', ['config', 'user.name',
+   inputs.comitterName])
   await exec.exec('git', ['config', 'user.email', inputs.comitterEmail])
 
   if (github.context.eventName !== 'pull_request') {
