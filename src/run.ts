@@ -28,6 +28,11 @@ export const run = async (inputs: Inputs): Promise<void> => {
   await exec.exec('git', ['status'])
   await exec.exec('git', ['commit', '-m', inputs.message])
   await exec.exec('git', ['push', 'origin'])
+
+  const headOutput = await exec.getExecOutput('git', ['rev-parse', 'HEAD'])
+  const headSHA = headOutput.stdout.trim()
+  core.info(`head SHA is ${headSHA}`)
+  core.setOutput('updated-sha', headSHA)
 }
 
 const createFollowUpPullRequest = async (inputs: Inputs) => {
