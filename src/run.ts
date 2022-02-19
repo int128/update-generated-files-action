@@ -27,8 +27,7 @@ export const run = async (inputs: Inputs): Promise<void> => {
   }
 
   await exec.exec('git', ['add', '.'])
-  await exec.exec('git', ['status'])
-  await exec.exec('git', ['commit', '-m', 'Fix inconsistency between source and generated files'])
+  await exec.exec('git', ['commit', '-m', 'Fix consistency of generated files'])
   await exec.exec('git', ['push'])
 
   const headOutput = await exec.getExecOutput('git', ['rev-parse', 'HEAD'])
@@ -50,14 +49,14 @@ This pull request will fix the inconsistency.
   await exec.exec('git', ['checkout', '-b', head])
   await exec.exec('git', ['add', '.'])
   await exec.exec('git', ['status'])
-  await exec.exec('git', ['commit', '-m', 'Fix inconsistency between source and generated files'])
+  await exec.exec('git', ['commit', '-m', 'Fix consistency of generated files'])
   await exec.exec('git', ['push', 'origin', head])
 
   const { data: pull } = await octokit.rest.pulls.create({
     ...github.context.repo,
     base,
     head,
-    title: `Fix inconsistency of ${base} branch`,
+    title: `Fix consistency of generated files in ${base} branch`,
     body,
   })
   core.info(`Created ${pull.html_url}`)
