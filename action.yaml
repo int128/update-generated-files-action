@@ -7,10 +7,6 @@ inputs:
     required: true
     default: ${{ github.token }}
 
-outputs:
-  updated-sha:
-    description: sha of a new commit if `git push` is done
-
 runs:
   using: 'node16'
   main: 'dist/index.js'
