@@ -38,7 +38,7 @@ export const run = async (inputs: Inputs): Promise<void> => {
 const createFollowUpPullRequest = async (inputs: Inputs) => {
   const [, , base] = github.context.ref.split('/')
   const head = `update-generated-files-${github.context.sha}-${github.context.runNumber}`
-  const body = `Hi ${github.context.actor},
+  const body = `Hi @${github.context.actor},
 ${base} branch is broken because there is difference between source and generated files at ${github.context.sha}.
 This pull request will fix the difference.
 `
