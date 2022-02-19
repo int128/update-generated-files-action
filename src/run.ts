@@ -15,7 +15,8 @@ export const run = async (inputs: Inputs): Promise<void> => {
     return
   }
 
-  await exec.exec('git', ['config', 'user.name', github.context.actor])
+  await exec.exec('git', ['config',
+    'user.name', github.context.actor])
   await exec.exec('git', ['config', 'user.email', `${github.context.actor}@users.noreply.github.com`])
 
   if (github.context.eventName !== 'pull_request') {
