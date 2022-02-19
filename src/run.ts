@@ -27,7 +27,7 @@ export const run = async (inputs: Inputs): Promise<void> => {
   await exec.exec('git', ['add', '.'])
   await exec.exec('git', ['status'])
   await exec.exec('git', ['commit', '-m', inputs.message])
-  await exec.exec('git', ['push', 'origin'])
+  await exec.exec('git', ['push'])
 
   const headOutput = await exec.getExecOutput('git', ['rev-parse', 'HEAD'])
   const headSHA = headOutput.stdout.trim()
