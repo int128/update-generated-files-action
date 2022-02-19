@@ -16,8 +16,8 @@ export const run = async (inputs: Inputs): Promise<void> => {
   }
 
   await exec.exec('git', ['config',
-    'user.name', github.context.actor])
-  await exec.exec('git', ['config', 'user.email', `${github.context.actor}@users.noreply.github.com`])
+    'user.name', 'github-actions'])
+  await exec.exec('git', ['config', 'user.email', '41898282+github-actions[bot]@users.noreply.github.com'])
 
   if (github.context.eventName !== 'pull_request') {
     core.info(`Creating a pull request to follow up the difference`)
