@@ -1,0 +1,40 @@
+name: ts
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - src/**
+      - tests/**
+      - '*.json'
+      - action.yaml
+      - .github/workflows/ts.yaml
+  pull_request:
+    branches: [main]
+    paths:
+      - src/**
+      - tests/**
+      - '*.json'
+      - action.yaml
+      - .github/workflows/ts.yaml
+
+jobs:
+  ts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: 16
+          cache: yarn
+      - run: yarn
+      - run: yarn lint
+      - run: yarn format-check
+      - run: yarn test
+      - run: yarn build
+      - run: yarn package
+
+      - name: e2e-test
+        uses: ./
+        with:
+          name: foo
