@@ -15,13 +15,12 @@ export const run = async (inputs: Inputs): Promise<void> => {
     return
   }
 
-  const octokit = github.getOctokit(inputs.token)
-  const { data: user } = await octokit.rest.users.getAuthenticated()
-  await exec.exec('git', ['config', 'user.name', user.login])
-  await exec.exec('git', ['config', 'user.email', user.email ?? 'github-actions@github.com'])
+  await exec.exec('git', ['config', 'user.name', github.context.actor])
+  await exec.exec('git', ['config', 'user.email', `${github.context.actor}@users.noreply.github.com`])
 
   if (github.context.eventName !== 'pull_request') {
     core.info(`Creating a pull request to follow up the difference`)
+    const octokit = github.getOctokit(inputs.token)
     await createFollowUpPullRequest(octokit)
     throw new Error(`${github.context.ref} is broken because there is difference between source and generated files`)
   }
