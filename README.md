@@ -66,6 +66,8 @@ If the generated files are inconsistent, automerge will be prevented due to the 
 
 If `git status` returns any change, this action fails.
 
+If the author of last commit was this action, it stops to prevent infinite loop.
+
 ### Inputs
 
 | Name | Default | Description
