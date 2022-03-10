@@ -5,6 +5,8 @@ import { GitHub } from '@actions/github/lib/utils'
 
 type Octokit = InstanceType<typeof GitHub>
 
+const authorName = 'update-generated-files-action'
+
 type Inputs = {
   token: string
 }
@@ -15,7 +17,12 @@ export const run = async (inputs: Inputs): Promise<void> => {
     return
   }
 
-  await exec.exec('git', ['config', 'user.name', 'github-actions'])
+  const lastAuthor = await gitLogLastAuthor()
+  if (lastAuthor == authorName) {
+    throw new Error(`Author of the last commit was ${lastAuthor}. Stop to prevent infinite loop`)
+  }
+
+  await exec.exec('git', ['config', 'user.name', authorName])
   await exec.exec('git', ['config', 'user.email', '41898282+github-actions[bot]@users.noreply.github.com'])
 
   if (github.context.eventName === 'pull_request') {
@@ -30,7 +37,6 @@ export const run = async (inputs: Inputs): Promise<void> => {
 
 const updateBranch = async () => {
   core.info(`Updating the current branch`)
-
   await exec.exec('git', ['add', '.'])
   await exec.exec('git', ['commit', '-m', 'Fix consistency of generated files'])
   await exec.exec('git', ['push'])
@@ -83,5 +89,10 @@ Created by [GitHub Actions](${github.context.serverUrl}/${github.context.repo.ow
 
 const gitStatus = async (): Promise<string> => {
   const o = await exec.getExecOutput('git', ['status', '--porcelain'])
+  return o.stdout.trim()
+}
+
+const gitLogLastAuthor = async () => {
+  const o = await exec.getExecOutput('git', ['log', '-n1', '--format=%an'])
   return o.stdout.trim()
 }
