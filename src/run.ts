@@ -27,8 +27,7 @@ export const run = async (inputs: Inputs): Promise<void> => {
 
   if (github.context.eventName === 'pull_request') {
     await updateBranch()
-    throw new
-      Error(`Inconsistent generated files in pull request`)
+    throw new Error(`Inconsistent generated files in pull request`)
   }
 
   const octokit = github.getOctokit(inputs.token)
