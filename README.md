@@ -1,15 +1,22 @@
 # update-generated-files-action [![ts](https://github.com/int128/update-generated-files-action/actions/workflows/ts.yaml/badge.svg)](https://github.com/int128/update-generated-files-action/actions/workflows/ts.yaml)
 
 This is a general-purpose action to keep consistency of the generated files.
-For example,
 
-- Code formatter (e.g., Prettier)
-- Code generator (e.g., OpenAPI, gRPC or GraphQL)
+Here are example use-cases.
+
+- Code formatter
+  - Prettier
+  - gofmt
+- Code generator
+  - OpenAPI Generator
+  - GraphQL Code Generator
+  - gRPC
+  - SQL
 
 
 ## Getting Started
 
-Create a workflow as follows:
+Create a workflow to regenerate files and then run this action.
 
 ```yaml
 on:
@@ -22,7 +29,7 @@ jobs:
   generate:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           ref: ${{ github.head_ref }}
 
@@ -39,7 +46,12 @@ If `git status` returns any change, this action pushes the change to the head br
 Otherwise, it does nothing.
 
 You need to explicitly checkout the head branch.
-Note that `actions/checkout@v2` checkouts a merged commit from the default branch.
+
+```yaml
+      - uses: actions/checkout@v3
+        with:
+          ref: ${{ github.head_ref }}
+```
 
 ### For push or other events
 
@@ -73,16 +85,3 @@ If the author of last commit was this action, it stops to prevent infinite loop.
 | Name | Default | Description
 |------|----------|------------
 | `token` | `github.token` | GitHub token
-
-
-## Development
-
-### Release workflow
-
-When a pull request is merged into main branch, a new minor release is created by GitHub Actions.
-See https://github.com/int128/release-typescript-action for details.
-
-### Dependency update
-
-You can enable Renovate to update the dependencies.
-This repository is shipped with the config https://github.com/int128/typescript-action-renovate-config.
