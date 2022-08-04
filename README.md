@@ -63,6 +63,22 @@ Here is an example of created pull request.
 <img width="1250" alt="image" src="https://user-images.githubusercontent.com/321266/154795860-5bd982b4-2706-4a04-b3c3-2458124853b8.png">
 
 
+### Re-trigger GitHub Actions for new commit
+
+This action uses `GITHUB_TOKEN` by default, but [it does not trigger a workflow](https://docs.github.com/en/actions/using-workflows/triggering-a-workflow#triggering-a-workflow-from-a-workflow) for the new commit.
+
+To re-trigger GitHub Actions for the new commit, you need to specify a personal access token or GitHub App token.
+
+```yaml
+      # something to regenerate files
+      - run: yarn format
+
+      - uses: int128/update-generated-files-action@v2
+        with:
+          token: ${{ secrets.YOUR_PERSONAL_ACCESS_TOKEN }}
+```
+
+
 ## Working with Renovate
 
 You can update both dependencies and generated files as follows:
