@@ -73,18 +73,26 @@ Created by [GitHub Actions](${github.context.serverUrl}/${github.context.repo.ow
   core.info(`Created ${pull.html_url}`)
 
   core.info(`Requesting a review to ${github.context.actor}`)
-  await octokit.rest.pulls.requestReviewers({
-    ...github.context.repo,
-    pull_number: pull.number,
-    reviewers: [github.context.actor],
-  })
+  try {
+    await octokit.rest.pulls.requestReviewers({
+      ...github.context.repo,
+      pull_number: pull.number,
+      reviewers: [github.context.actor],
+    })
+  } catch (e) {
+    core.warning(`could not request a review to ${github.context.actor}: ${String(e)}`)
+  }
 
   core.info(`Adding ${github.context.actor} to assignees`)
-  await octokit.rest.issues.addAssignees({
-    ...github.context.repo,
-    issue_number: pull.number,
-    assignees: [github.context.actor],
-  })
+  try {
+    await octokit.rest.issues.addAssignees({
+      ...github.context.repo,
+      issue_number: pull.number,
+      assignees: [github.context.actor],
+    })
+  } catch (e) {
+    core.warning(`could not assign ${github.context.actor}: ${String(e)}`)
+  }
 }
 
 const gitStatus = async (): Promise<string> => {
