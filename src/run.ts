@@ -28,7 +28,7 @@ export const run = async (inputs: Inputs): Promise<void> => {
 
   if (github.context.eventName === 'pull_request') {
     core.info(`Updating the current branch`)
-    await git.updateCurrentBranch(inputs.title)
+    await git.updateCurrentBranch({ commitMessage: inputs.title, token: inputs.token })
     throw new Error(`Inconsistent generated files in pull request`)
   }
 
@@ -37,7 +37,7 @@ export const run = async (inputs: Inputs): Promise<void> => {
   throw new Error(`Inconsistent generated files in ${github.context.ref}`)
 }
 
-const createPullRequest = async (octokit: Octokit, inputs: Pick<Inputs, 'title' | 'body'>) => {
+const createPullRequest = async (octokit: Octokit, inputs: Inputs) => {
   const [, , base] = github.context.ref.split('/')
   core.info(`Creating a pull request for ${base} branch`)
 
@@ -52,7 +52,7 @@ Created by [GitHub Actions](${github.context.serverUrl}/${github.context.repo.ow
 `
 
   core.info(`Creating a branch ${head}`)
-  await git.createBranch(head, inputs.title)
+  await git.createBranch({ branch: head, commitMessage: inputs.title, token: inputs.token })
 
   const { data: pull } = await octokit.rest.pulls.create({
     ...github.context.repo,

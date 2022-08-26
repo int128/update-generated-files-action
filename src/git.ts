@@ -5,18 +5,40 @@ export const setConfigUser = async (name: string, email: string) => {
   await exec.exec('git', ['config', 'user.email', email])
 }
 
-export const updateCurrentBranch = async (commitMessage: string) => {
-  await exec.exec('git', ['add', '.'])
-  await exec.exec('git', ['commit', '-m', commitMessage])
-  await exec.exec('git', ['push'])
+type UpdateCurrentBranchInput = {
+  commitMessage: string
+  token: string
 }
 
-export const createBranch = async (branch: string, commitMessage: string) => {
-  await exec.exec('git', ['checkout', '-b', branch])
+export const updateCurrentBranch = async (input: UpdateCurrentBranchInput) => {
+  await exec.exec('git', ['add', '.'])
+  await exec.exec('git', ['commit', '-m', input.commitMessage])
+  await exec.exec('git', [
+    '-c',
+    `http.https://github.com/.extraheader=AUTHORIZATION: basic ${input.token}`,
+    'push',
+    'origin',
+  ])
+}
+
+type CreateBranchInput = {
+  branch: string
+  commitMessage: string
+  token: string
+}
+
+export const createBranch = async (input: CreateBranchInput) => {
+  await exec.exec('git', ['checkout', '-b', input.branch])
   await exec.exec('git', ['add', '.'])
   await exec.exec('git', ['status'])
-  await exec.exec('git', ['commit', '-m', commitMessage])
-  await exec.exec('git', ['push', 'origin', branch])
+  await exec.exec('git', ['commit', '-m', input.commitMessage])
+  await exec.exec('git', [
+    '-c',
+    `http.https://github.com/.extraheader=AUTHORIZATION: basic ${input.token}`,
+    'push',
+    'origin',
+    input.branch,
+  ])
 }
 
 export const status = async (): Promise<string> => {
