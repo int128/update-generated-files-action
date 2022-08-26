@@ -1,5 +1,5 @@
 import * as core from '@actions/core'
-import * as exec from '@actions/exec'
+import * as git from './git'
 import * as github from '@actions/github'
 import { GitHub } from '@actions/github/lib/utils'
 
@@ -14,34 +14,27 @@ type Inputs = {
 }
 
 export const run = async (inputs: Inputs): Promise<void> => {
-  if ((await gitStatus()) === '') {
+  if ((await git.status()) === '') {
     core.info('Nothing to commit')
     return
   }
 
-  const lastAuthor = await gitLogLastAuthor()
+  const lastAuthor = await git.getLastAuthorFromLog()
   if (lastAuthor == authorName) {
     throw new Error(`Author of the last commit was ${lastAuthor}. Stop to prevent infinite loop`)
   }
 
-  await exec.exec('git', ['config', 'user.name', authorName])
-  await exec.exec('git', ['config', 'user.email', '41898282+github-actions[bot]@users.noreply.github.com'])
+  await git.setConfigUser(authorName, '41898282+github-actions[bot]@users.noreply.github.com')
 
   if (github.context.eventName === 'pull_request') {
-    await updateBranch(inputs.title)
+    core.info(`Updating the current branch`)
+    await git.updateCurrentBranch(inputs.title)
     throw new Error(`Inconsistent generated files in pull request`)
   }
 
   const octokit = github.getOctokit(inputs.token)
   await createPullRequest(octokit, inputs)
   throw new Error(`Inconsistent generated files in ${github.context.ref}`)
-}
-
-const updateBranch = async (title: string) => {
-  core.info(`Updating the current branch`)
-  await exec.exec('git', ['add', '.'])
-  await exec.exec('git', ['commit', '-m', title])
-  await exec.exec('git', ['push'])
 }
 
 const createPullRequest = async (octokit: Octokit, inputs: Pick<Inputs, 'title' | 'body'>) => {
@@ -58,11 +51,8 @@ ${inputs.body}
 Created by [GitHub Actions](${github.context.serverUrl}/${github.context.repo.owner}/${github.context.repo.repo}/actions/runs/${github.context.runId}) at ${github.context.ref}.
 `
 
-  await exec.exec('git', ['checkout', '-b', head])
-  await exec.exec('git', ['add', '.'])
-  await exec.exec('git', ['status'])
-  await exec.exec('git', ['commit', '-m', inputs.title])
-  await exec.exec('git', ['push', 'origin', head])
+  core.info(`Creating a branch ${head}`)
+  await git.createBranch(head, inputs.title)
 
   const { data: pull } = await octokit.rest.pulls.create({
     ...github.context.repo,
@@ -94,14 +84,4 @@ Created by [GitHub Actions](${github.context.serverUrl}/${github.context.repo.ow
   } catch (e) {
     core.warning(`could not assign ${github.context.actor}: ${String(e)}`)
   }
-}
-
-const gitStatus = async (): Promise<string> => {
-  const o = await exec.getExecOutput('git', ['status', '--porcelain'])
-  return o.stdout.trim()
-}
-
-const gitLogLastAuthor = async () => {
-  const o = await exec.getExecOutput('git', ['log', '-n1', '--format=%an'])
-  return o.stdout.trim()
 }
