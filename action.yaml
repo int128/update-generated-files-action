@@ -2,6 +2,16 @@ name: update-generated-files
 description: git push if there is changed file(s)
 
 inputs:
+  title:
+    description: title of commit and pull request
+    required: true
+    default: Fix consistency of generated files
+  body:
+    description: body of pull request
+    required: true
+    default: |
+      This pull request will fix the consistency of generated files.
+      See the change for details.
   token:
     description: GitHub token to create a pull request
     required: true

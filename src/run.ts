@@ -8,6 +8,8 @@ type Octokit = InstanceType<typeof GitHub>
 const authorName = 'update-generated-files-action'
 
 type Inputs = {
+  title: string
+  body: string
   token: string
 }
 
@@ -26,31 +28,30 @@ export const run = async (inputs: Inputs): Promise<void> => {
   await exec.exec('git', ['config', 'user.email', '41898282+github-actions[bot]@users.noreply.github.com'])
 
   if (github.context.eventName === 'pull_request') {
-    await updateBranch()
+    await updateBranch(inputs.title)
     throw new Error(`Inconsistent generated files in pull request`)
   }
 
   const octokit = github.getOctokit(inputs.token)
-  await createPullRequest(octokit)
+  await createPullRequest(octokit, inputs)
   throw new Error(`Inconsistent generated files in ${github.context.ref}`)
 }
 
-const updateBranch = async () => {
+const updateBranch = async (title: string) => {
   core.info(`Updating the current branch`)
   await exec.exec('git', ['add', '.'])
-  await exec.exec('git', ['commit', '-m', 'Fix consistency of generated files'])
+  await exec.exec('git', ['commit', '-m', title])
   await exec.exec('git', ['push'])
 }
 
-const createPullRequest = async (octokit: Octokit) => {
+const createPullRequest = async (octokit: Octokit, inputs: Pick<Inputs, 'title' | 'body'>) => {
   const [, , base] = github.context.ref.split('/')
   core.info(`Creating a pull request for ${base} branch`)
 
   const head = `update-generated-files-${github.context.sha}-${github.context.runNumber}`
   const body = `Hi @${github.context.actor},
 
-This pull request will fix the consistency of generated files.
-See the change for details.
+${inputs.body}
 
 ----
 
@@ -60,14 +61,14 @@ Created by [GitHub Actions](${github.context.serverUrl}/${github.context.repo.ow
   await exec.exec('git', ['checkout', '-b', head])
   await exec.exec('git', ['add', '.'])
   await exec.exec('git', ['status'])
-  await exec.exec('git', ['commit', '-m', 'Fix consistency of generated files'])
+  await exec.exec('git', ['commit', '-m', inputs.title])
   await exec.exec('git', ['push', 'origin', head])
 
   const { data: pull } = await octokit.rest.pulls.create({
     ...github.context.repo,
     base,
     head,
-    title: `Fix consistency of generated files in ${base} branch`,
+    title: inputs.title,
     body,
   })
   core.info(`Created ${pull.html_url}`)
