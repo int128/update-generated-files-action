@@ -24,7 +24,7 @@ export const status = async (): Promise<string> => {
   return o.stdout.trim()
 }
 
-export const logLastAuthor = async () => {
+export const getLastAuthorFromLog = async () => {
   const o = await exec.getExecOutput('git', ['log', '-n1', '--format=%an'])
   return o.stdout.trim()
 }

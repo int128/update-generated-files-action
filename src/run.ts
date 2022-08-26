@@ -19,7 +19,7 @@ export const run = async (inputs: Inputs): Promise<void> => {
     return
   }
 
-  const lastAuthor = await git.logLastAuthor()
+  const lastAuthor = await git.getLastAuthorFromLog()
   if (lastAuthor == authorName) {
     throw new Error(`Author of the last commit was ${lastAuthor}. Stop to prevent infinite loop`)
   }
