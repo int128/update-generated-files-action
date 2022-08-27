@@ -35,6 +35,11 @@ const push = async (token: string, args: readonly string[] = []) => {
   const credentials = Buffer.from(`x-access-token:${token}`).toString('base64')
   core.setSecret(credentials)
   return await exec.exec('git', [
+    // reset extraheader set by actions/checkout
+    // https://github.com/actions/checkout/issues/162#issuecomment-590821598
+    '-c',
+    `http.https://github.com/.extraheader=`,
+    // replace the token
     '-c',
     `http.https://github.com/.extraheader=AUTHORIZATION: basic ${credentials}`,
     'push',
