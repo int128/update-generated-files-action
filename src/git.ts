@@ -1,3 +1,4 @@
+import * as core from '@actions/core'
 import * as exec from '@actions/exec'
 
 export const setConfigUser = async (name: string, email: string) => {
@@ -5,18 +6,45 @@ export const setConfigUser = async (name: string, email: string) => {
   await exec.exec('git', ['config', 'user.email', email])
 }
 
-export const updateCurrentBranch = async (commitMessage: string) => {
-  await exec.exec('git', ['add', '.'])
-  await exec.exec('git', ['commit', '-m', commitMessage])
-  await exec.exec('git', ['push'])
+type UpdateCurrentBranchInput = {
+  commitMessage: string
+  token: string
 }
 
-export const createBranch = async (branch: string, commitMessage: string) => {
-  await exec.exec('git', ['checkout', '-b', branch])
+export const updateCurrentBranch = async (input: UpdateCurrentBranchInput) => {
+  await exec.exec('git', ['add', '.'])
+  await exec.exec('git', ['commit', '-m', input.commitMessage])
+  await push(input.token)
+}
+
+type CreateBranchInput = {
+  branch: string
+  commitMessage: string
+  token: string
+}
+
+export const createBranch = async (input: CreateBranchInput) => {
+  await exec.exec('git', ['checkout', '-b', input.branch])
   await exec.exec('git', ['add', '.'])
   await exec.exec('git', ['status'])
-  await exec.exec('git', ['commit', '-m', commitMessage])
-  await exec.exec('git', ['push', 'origin', branch])
+  await exec.exec('git', ['commit', '-m', input.commitMessage])
+  await push(input.token, ['origin', input.branch])
+}
+
+const push = async (token: string, args: readonly string[] = []) => {
+  const credentials = Buffer.from(`x-access-token:${token}`).toString('base64')
+  core.setSecret(credentials)
+  return await exec.exec('git', [
+    // reset extraheader set by actions/checkout
+    // https://github.com/actions/checkout/issues/162#issuecomment-590821598
+    '-c',
+    `http.https://github.com/.extraheader=`,
+    // replace the token
+    '-c',
+    `http.https://github.com/.extraheader=AUTHORIZATION: basic ${credentials}`,
+    'push',
+    ...args,
+  ])
 }
 
 export const status = async (): Promise<string> => {
