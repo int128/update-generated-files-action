@@ -29,12 +29,14 @@ export const run = async (inputs: Inputs): Promise<void> => {
   if (github.context.eventName === 'pull_request') {
     core.info(`Updating the current branch`)
     await git.updateCurrentBranch({ commitMessage: inputs.title, token: inputs.token })
-    throw new Error(`Inconsistent generated files in pull request`)
+    throw new Error(`GitHub Actions automatically added a commit to fix the generated files.`)
   }
 
   const octokit = github.getOctokit(inputs.token)
-  await createPullRequest(octokit, inputs)
-  throw new Error(`Inconsistent generated files in ${github.context.ref}`)
+  const pullRequestURL = await createPullRequest(octokit, inputs)
+  throw new Error(
+    `You may need to fix the generated files in ${github.context.ref}. Review the pull request: ${pullRequestURL}`
+  )
 }
 
 const createPullRequest = async (octokit: Octokit, inputs: Inputs) => {
@@ -71,7 +73,7 @@ Created by [GitHub Actions](${github.context.serverUrl}/${github.context.repo.ow
       reviewers: [github.context.actor],
     })
   } catch (e) {
-    core.warning(`could not request a review to ${github.context.actor}: ${String(e)}`)
+    core.info(`could not request a review to ${github.context.actor}: ${String(e)}`)
   }
 
   core.info(`Adding ${github.context.actor} to assignees`)
@@ -82,6 +84,8 @@ Created by [GitHub Actions](${github.context.serverUrl}/${github.context.repo.ow
       assignees: [github.context.actor],
     })
   } catch (e) {
-    core.warning(`could not assign ${github.context.actor}: ${String(e)}`)
+    core.info(`could not assign ${github.context.actor}: ${String(e)}`)
   }
+
+  return pull.html_url
 }
