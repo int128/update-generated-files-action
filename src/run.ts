@@ -19,11 +19,6 @@ export const run = async (inputs: Inputs): Promise<void> => {
     return
   }
 
-  const lastAuthor = await git.getLastAuthorFromLog()
-  if (lastAuthor == authorName) {
-    throw new Error(`Author of the last commit was ${lastAuthor}. Stop to prevent infinite loop`)
-  }
-
   await git.setConfigUser(authorName, '41898282+github-actions[bot]@users.noreply.github.com')
 
   if (github.context.eventName === 'pull_request') {

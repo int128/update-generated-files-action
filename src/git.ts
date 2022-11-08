@@ -51,8 +51,3 @@ export const status = async (): Promise<string> => {
   const o = await exec.getExecOutput('git', ['status', '--porcelain'])
   return o.stdout.trim()
 }
-
-export const getLastAuthorFromLog = async () => {
-  const o = await exec.getExecOutput('git', ['log', '-n1', '--format=%an'])
-  return o.stdout.trim()
-}
