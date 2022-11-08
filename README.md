@@ -53,14 +53,6 @@ You need to explicitly checkout the head branch.
           ref: ${{ github.head_ref }}
 ```
 
-You can change the title or body of pull request.
-
-```yaml
-      - uses: int128/update-generated-files-action@v2
-        with:
-          title: Regenerate yarn.lock
-```
-
 ### For push or other events
 
 If `git status` returns any change, this action creates a pull request to fix the inconsistency.
@@ -70,6 +62,13 @@ Here is an example of created pull request.
 
 <img width="1250" alt="image" src="https://user-images.githubusercontent.com/321266/154795860-5bd982b4-2706-4a04-b3c3-2458124853b8.png">
 
+You can change the title or body of pull request.
+
+```yaml
+      - uses: int128/update-generated-files-action@v2
+        with:
+          title: Regenerate yarn.lock
+```
 
 ### Re-trigger GitHub Actions for new commit
 
@@ -106,6 +105,6 @@ If `git status` returns any change, this action fails.
 
 | Name | Default | Description
 |------|----------|------------
-| `title` | see action.yaml | Title of commit and pull request
+| `title` | see action.yaml | Title of pull request
 | `body` | see action.yaml | Body of pull request
 | `token` | `github.token` | GitHub token
