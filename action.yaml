@@ -3,7 +3,7 @@ description: git push if there is changed file(s)
 
 inputs:
   title:
-    description: title of commit and pull request
+    description: title of pull request
     required: true
     default: Fix generated files
   body:
