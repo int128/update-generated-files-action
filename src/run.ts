@@ -24,7 +24,14 @@ export const run = async (inputs: Inputs): Promise<void> => {
   if (github.context.eventName === 'pull_request') {
     core.info(`Updating the current branch`)
     await git.updateCurrentBranch({ commitMessage: inputs.title, token: inputs.token })
-    throw new Error(`GitHub Actions automatically added a commit to fix the generated files.`)
+
+    // the head ref is outdated,
+    if (github.context.payload.action === 'opened' || github.context.payload.action === 'synchronize') {
+      throw new Error(
+        `GitHub Actions automatically added a commit to the pull request. CI should pass on the new commit.`
+      )
+    }
+    return
   }
 
   const octokit = github.getOctokit(inputs.token)
