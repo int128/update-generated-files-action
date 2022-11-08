@@ -27,8 +27,10 @@ export const run = async (inputs: Inputs): Promise<void> => {
 
     // the head ref is outdated,
     if (github.context.payload.action === 'opened' || github.context.payload.action === 'synchronize') {
-      throw new Error(`GitHub Actions automatically added a commit to the pull request. CI should pass on the new commit.`)
-}
+      throw new Error(
+        `GitHub Actions automatically added a commit to the pull request. CI should pass on the new commit.`
+      )
+    }
     return
   }
 
