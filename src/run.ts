@@ -30,9 +30,13 @@ export const run = async (inputs: Inputs): Promise<void> => {
   }
   const octokit = github.getOctokit(inputs.token)
   const pullRequestURL = await createPullRequest(octokit, inputs)
-  throw new Error(
-    `You may need to fix the generated files in ${github.context.ref}. Review the pull request: ${pullRequestURL}`
-  )
+
+  // fail only if the ref is outdated
+  if (github.context.eventName === 'push') {
+    throw new Error(
+      `You may need to fix the generated files in ${github.context.ref}. Review the pull request: ${pullRequestURL}`
+    )
+  }
 }
 
 const updatePullRequest = async (inputs: Inputs) => {
