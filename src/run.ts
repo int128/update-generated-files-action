@@ -76,6 +76,9 @@ Created by [GitHub Actions](${github.context.serverUrl}/${github.context.repo.ow
     body,
   })
   core.info(`Created ${pull.html_url}`)
+  core.summary.addHeading(`Created a pull request: ${inputs.title}`)
+  core.summary.addLink(`${pull.base.repo.full_name}#${pull.number}`, pull.html_url)
+  await core.summary.write()
 
   core.info(`Requesting a review to ${github.context.actor}`)
   try {
