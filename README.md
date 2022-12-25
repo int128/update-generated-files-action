@@ -40,8 +40,13 @@ jobs:
 
 ### For pull request event
 
-If `git status` returns any change, this action pushes the change to the head branch.
+If `git status` returns any change, this action adds a commit of the current change to the head branch.
 Otherwise, it does nothing.
+
+Since [GitHub Actions runs on the merge branch](https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#pull_request), you will see both "Merge" and "Generated" commit.
+For example,
+
+<img width="860" alt="image" src="https://user-images.githubusercontent.com/321266/209461681-35ffd262-514a-4fdc-aa3d-a875f4125dae.png">
 
 ### For push or other events
 
