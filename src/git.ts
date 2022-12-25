@@ -7,17 +7,17 @@ export const setConfigUser = async (name: string, email: string) => {
 }
 
 type FetchBranchInput = {
-  branch: string
+  ref: string
   depth: number
   token: string
 }
 
 export const fetchBranch = async (input: FetchBranchInput) => {
-  await execWithToken(input.token, ['fetch', `--depth=${input.depth}`, 'origin', input.branch])
+  await execWithToken(input.token, ['fetch', `--depth=${input.depth}`, 'origin', input.ref])
 }
 
 type UpdateBranchInput = {
-  branch: string
+  ref: string
   commitMessage: string
   token: string
 }
@@ -25,7 +25,7 @@ type UpdateBranchInput = {
 export const updateBranch = async (input: UpdateBranchInput) => {
   await exec.exec('git', ['add', '.'])
   await exec.exec('git', ['commit', '-m', input.commitMessage])
-  await execWithToken(input.token, ['push', 'origin', `HEAD:${input.branch}`])
+  await execWithToken(input.token, ['push', 'origin', `HEAD:${input.ref}`])
 }
 
 type CreateBranchInput = {

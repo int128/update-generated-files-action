@@ -50,14 +50,14 @@ const handlePullRequestEvent = async (inputs: Inputs) => {
   if (!isPullRequestPayload(payload)) {
     throw new Error(`invalid pull_request payload`)
   }
-  const headBranch = payload.pull_request.head.ref
+  const head = payload.pull_request.head.ref
 
-  core.info(`Updating the head branch ${headBranch}`)
-  await git.fetchBranch({ branch: github.context.ref, depth: 2, token: inputs.token })
-  await git.updateBranch({ branch: headBranch, commitMessage, token: inputs.token })
+  core.info(`Updating the head branch ${head}`)
+  await git.fetchBranch({ ref: github.context.ref, depth: 2, token: inputs.token })
+  await git.updateBranch({ ref: `refs/heads/${head}`, commitMessage, token: inputs.token })
 
   // fail only if the head ref is outdated
-  if (github.context.payload.action === 'opened' || github.context.payload.action === 'synchronize') {
+  if (payload.action === 'opened' || payload.action === 'synchronize') {
     throw new Error(
       `GitHub Actions automatically added a commit to the pull request. CI should pass on the new commit.`
     )
@@ -123,3 +123,5 @@ Created by [GitHub Actions](${github.context.serverUrl}/${github.context.repo.ow
     )
   }
 }
+
+
