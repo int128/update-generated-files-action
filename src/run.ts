@@ -24,16 +24,9 @@ export const run = async (inputs: Inputs): Promise<void> => {
   await git.setConfigUser(authorName, '41898282+github-actions[bot]@users.noreply.github.com')
 
   if (github.context.eventName === 'pull_request') {
-    return await updatePullRequest(inputs)
+    return await handlePullRequestEvent(inputs)
   }
-
-  const pullRequestURL = await createPullRequest(inputs)
-  if (github.context.eventName === 'push') {
-    // fail only if the ref is outdated
-    throw new Error(
-      `You may need to fix the generated files in ${github.context.ref}. Review the pull request: ${pullRequestURL}`
-    )
-  }
+  await handleOtherEvent(inputs)
 }
 
 type PullRequestPayload = WebhookPayload & {
@@ -52,7 +45,7 @@ const isPullRequestPayload = (payload: WebhookPayload): payload is PullRequestPa
   return typeof head === 'object' && 'ref' in head
 }
 
-const updatePullRequest = async (inputs: Inputs) => {
+const handlePullRequestEvent = async (inputs: Inputs) => {
   const { payload } = github.context
   if (!isPullRequestPayload(payload)) {
     throw new Error(`invalid pull_request payload`)
@@ -72,7 +65,7 @@ const updatePullRequest = async (inputs: Inputs) => {
   return
 }
 
-const createPullRequest = async (inputs: Inputs) => {
+const handleOtherEvent = async (inputs: Inputs) => {
   const octokit = github.getOctokit(inputs.token)
   const head = `update-generated-files-${github.context.sha}-${github.context.runNumber}`
   core.info(`Creating a head branch ${head}`)
@@ -123,5 +116,10 @@ Created by [GitHub Actions](${github.context.serverUrl}/${github.context.repo.ow
     core.info(`could not assign ${github.context.actor}: ${String(e)}`)
   }
 
-  return pull.html_url
+  if (github.context.eventName === 'push') {
+    // fail only if the ref is outdated
+    throw new Error(
+      `You may need to fix the generated files in ${github.context.ref}. Review the pull request: ${pull.html_url}`
+    )
+  }
 }
