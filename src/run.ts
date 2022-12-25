@@ -1,9 +1,7 @@
 import * as core from '@actions/core'
 import * as git from './git'
 import * as github from '@actions/github'
-import { GitHub } from '@actions/github/lib/utils'
-
-type Octokit = InstanceType<typeof GitHub>
+import { WebhookPayload } from '@actions/github/lib/interfaces'
 
 const authorName = 'update-generated-files-action'
 
@@ -17,6 +15,22 @@ type Inputs = {
   token: string
 }
 
+type PullRequestPayload = WebhookPayload & {
+  pull_request: WebhookPayload['pull_request'] & {
+    head: {
+      ref: string
+    }
+  }
+}
+
+const isPullRequestPayload = (payload: WebhookPayload): payload is PullRequestPayload => {
+  if (payload.pull_request === undefined) {
+    return false
+  }
+  const { head } = payload.pull_request
+  return typeof head === 'object' && 'ref' in head
+}
+
 export const run = async (inputs: Inputs): Promise<void> => {
   if ((await git.status()) === '') {
     core.info('Nothing to commit')
@@ -26,22 +40,25 @@ export const run = async (inputs: Inputs): Promise<void> => {
   await git.setConfigUser(authorName, '41898282+github-actions[bot]@users.noreply.github.com')
 
   if (github.context.eventName === 'pull_request') {
-    return await updatePullRequest(inputs)
+    const { payload } = github.context
+    if (!isPullRequestPayload(payload)) {
+      throw new Error(`invalid pull_request payload`)
+    }
+    return await updatePullRequest(inputs, payload)
   }
-  const octokit = github.getOctokit(inputs.token)
-  const pullRequestURL = await createPullRequest(octokit, inputs)
 
-  // fail only if the ref is outdated
+  const pullRequestURL = await createPullRequest(inputs)
   if (github.context.eventName === 'push') {
+    // fail only if the ref is outdated
     throw new Error(
       `You may need to fix the generated files in ${github.context.ref}. Review the pull request: ${pullRequestURL}`
     )
   }
 }
 
-const updatePullRequest = async (inputs: Inputs) => {
-  core.info(`Updating the current branch`)
-  await git.updateCurrentBranch({ commitMessage, token: inputs.token })
+const updatePullRequest = async (inputs: Inputs, payload: PullRequestPayload) => {
+  core.info(`Updating the head branch ${payload.pull_request.head.ref}`)
+  await git.updateBranch({ branch: payload.pull_request.head.ref, commitMessage, token: inputs.token })
 
   // fail only if the head ref is outdated
   if (github.context.payload.action === 'opened' || github.context.payload.action === 'synchronize') {
@@ -52,7 +69,8 @@ const updatePullRequest = async (inputs: Inputs) => {
   return
 }
 
-const createPullRequest = async (octokit: Octokit, inputs: Inputs) => {
+const createPullRequest = async (inputs: Inputs) => {
+  const octokit = github.getOctokit(inputs.token)
   const head = `update-generated-files-${github.context.sha}-${github.context.runNumber}`
   core.info(`Creating a head branch ${head}`)
   await git.createBranch({ branch: head, commitMessage, token: inputs.token })
@@ -104,5 +122,3 @@ Created by [GitHub Actions](${github.context.serverUrl}/${github.context.repo.ow
 
   return pull.html_url
 }
-
-

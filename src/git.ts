@@ -6,15 +6,16 @@ export const setConfigUser = async (name: string, email: string) => {
   await exec.exec('git', ['config', 'user.email', email])
 }
 
-type UpdateCurrentBranchInput = {
+type UpdateBranchInput = {
+  branch: string
   commitMessage: string
   token: string
 }
 
-export const updateCurrentBranch = async (input: UpdateCurrentBranchInput) => {
+export const updateBranch = async (input: UpdateBranchInput) => {
   await exec.exec('git', ['add', '.'])
   await exec.exec('git', ['commit', '-m', input.commitMessage])
-  await push(input.token)
+  await push(input.token, ['origin', `HEAD:${input.branch}`])
 }
 
 type CreateBranchInput = {
