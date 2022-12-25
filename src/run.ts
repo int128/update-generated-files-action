@@ -60,7 +60,7 @@ const updatePullRequest = async (inputs: Inputs) => {
   const headBranch = payload.pull_request.head.ref
 
   core.info(`Updating the head branch ${headBranch}`)
-  await git.fetchBranch({ branch: headBranch, depth: 2, token: inputs.token })
+  await git.fetchBranch({ branch: github.context.ref, depth: 2, token: inputs.token })
   await git.updateBranch({ branch: headBranch, commitMessage, token: inputs.token })
 
   // fail only if the head ref is outdated
