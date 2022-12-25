@@ -15,6 +15,27 @@ type Inputs = {
   token: string
 }
 
+export const run = async (inputs: Inputs): Promise<void> => {
+  if ((await git.status()) === '') {
+    core.info('Nothing to commit')
+    return
+  }
+
+  await git.setConfigUser(authorName, '41898282+github-actions[bot]@users.noreply.github.com')
+
+  if (github.context.eventName === 'pull_request') {
+    return await updatePullRequest(inputs)
+  }
+
+  const pullRequestURL = await createPullRequest(inputs)
+  if (github.context.eventName === 'push') {
+    // fail only if the ref is outdated
+    throw new Error(
+      `You may need to fix the generated files in ${github.context.ref}. Review the pull request: ${pullRequestURL}`
+    )
+  }
+}
+
 type PullRequestPayload = WebhookPayload & {
   pull_request: WebhookPayload['pull_request'] & {
     head: {
@@ -31,34 +52,16 @@ const isPullRequestPayload = (payload: WebhookPayload): payload is PullRequestPa
   return typeof head === 'object' && 'ref' in head
 }
 
-export const run = async (inputs: Inputs): Promise<void> => {
-  if ((await git.status()) === '') {
-    core.info('Nothing to commit')
-    return
+const updatePullRequest = async (inputs: Inputs) => {
+  const { payload } = github.context
+  if (!isPullRequestPayload(payload)) {
+    throw new Error(`invalid pull_request payload`)
   }
+  const headBranch = payload.pull_request.head.ref
 
-  await git.setConfigUser(authorName, '41898282+github-actions[bot]@users.noreply.github.com')
-
-  if (github.context.eventName === 'pull_request') {
-    const { payload } = github.context
-    if (!isPullRequestPayload(payload)) {
-      throw new Error(`invalid pull_request payload`)
-    }
-    return await updatePullRequest(inputs, payload)
-  }
-
-  const pullRequestURL = await createPullRequest(inputs)
-  if (github.context.eventName === 'push') {
-    // fail only if the ref is outdated
-    throw new Error(
-      `You may need to fix the generated files in ${github.context.ref}. Review the pull request: ${pullRequestURL}`
-    )
-  }
-}
-
-const updatePullRequest = async (inputs: Inputs, payload: PullRequestPayload) => {
-  core.info(`Updating the head branch ${payload.pull_request.head.ref}`)
-  await git.updateBranch({ branch: payload.pull_request.head.ref, commitMessage, token: inputs.token })
+  core.info(`Updating the head branch ${headBranch}`)
+  await git.fetchBranch({ branch: headBranch, depth: 2, token: inputs.token })
+  await git.updateBranch({ branch: headBranch, commitMessage, token: inputs.token })
 
   // fail only if the head ref is outdated
   if (github.context.payload.action === 'opened' || github.context.payload.action === 'synchronize') {
