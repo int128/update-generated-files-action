@@ -30,8 +30,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-        with:
-          ref: ${{ github.head_ref }}
 
       # something to regenerate files
       - run: yarn
@@ -44,14 +42,6 @@ jobs:
 
 If `git status` returns any change, this action pushes the change to the head branch.
 Otherwise, it does nothing.
-
-You need to explicitly checkout the head branch.
-
-```yaml
-      - uses: actions/checkout@v3
-        with:
-          ref: ${{ github.head_ref }}
-```
 
 ### For push or other events
 
