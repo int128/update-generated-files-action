@@ -16,7 +16,7 @@ Here are example use-cases.
 
 ## Getting Started
 
-Create a workflow to regenerate files and then run this action.
+Here is an example workflow.
 
 ```yaml
 on:
@@ -31,8 +31,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      # something to regenerate files
-      - run: yarn
+      # something to generate files
       - run: yarn format
 
       - uses: int128/update-generated-files-action@v2
@@ -40,57 +39,58 @@ jobs:
 
 ### For pull request event
 
-This action adds a commit of the current change to the head branch.
+This action adds a commit of the current change to the head branch, if `git status` returns any change.
 
 Since `actions/checkout` checks out [the merge branch](https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#pull_request) by default, this action adds a commit onto the merge commit.
-You will see both the merge commit and this commit.
-For example,
+You will see both merge commit and generated commit, for example,
 
 <img width="860" alt="image" src="https://user-images.githubusercontent.com/321266/209461681-35ffd262-514a-4fdc-aa3d-a875f4125dae.png">
 
-Here is a diagram of commit graph.
+Here is a diagram of the commit graph.
 
 ```mermaid
 gitGraph
-  commit
-  commit
+  commit id:"_"
+  commit id:"PR base"
   checkout main
-  branch feature
-  commit id:"Your change"
+  branch topic
+  commit id:"PR head"
   merge main
   commit id:"Added by this action"
 ```
 
-If you don't want to add the merge commit, explicitly checkout the head commit as follows:
+If you don't want to add the merge commit, set the head branch to `actions/checkout` as follows:
 
 ```yaml
+jobs:
+  generate:
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
         with:
           ref: ${{ github.head_ref }}
 
-      # something to regenerate files
+      # something to generate files
       - run: yarn format
 
       - uses: int128/update-generated-files-action@v2
 ```
 
-Here is a diagram of commit graph.
+Here is a diagram of the commit graph if the head branch is checked out.
 
 ```mermaid
 gitGraph
-  commit
-  commit
+  commit id:"_"
+  commit id: "PR base"
   checkout main
-  branch feature
-  commit id:"Your change"
+  branch topic
+  commit id:"PR head"
   commit id:"Added by this action"
 ```
 
 ### For push or other events
 
-If `git status` returns any change, this action creates a pull request to fix the inconsistency.
-Otherwise, it does nothing.
+This action creates a pull request with the current change, if `git status` returns any change.
 
 Here is an example of created pull request.
 
@@ -104,14 +104,14 @@ You can change the title or body of pull request.
           title: Regenerate yarn.lock
 ```
 
-### Re-trigger GitHub Actions for new commit
+### Trigger GitHub Actions for new commit
 
 This action uses `GITHUB_TOKEN` by default, but [it does not trigger a workflow](https://docs.github.com/en/actions/using-workflows/triggering-a-workflow#triggering-a-workflow-from-a-workflow) for the new commit.
 
 To re-trigger GitHub Actions for the new commit, you need to specify a personal access token or GitHub App token.
 
 ```yaml
-      # something to regenerate files
+      # something to generate files
       - run: yarn format
 
       - uses: int128/update-generated-files-action@v2
