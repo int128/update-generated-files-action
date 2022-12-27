@@ -1,7 +1,7 @@
 import * as core from '@actions/core'
 import * as git from './git'
 import * as github from '@actions/github'
-import { handlePullRequestEvent } from './pull_request_event'
+import { PullRequestContext, handlePullRequestEvent } from './pull_request_event'
 import { handleOtherEvent } from './other_event'
 
 const authorName = 'update-generated-files-action'
@@ -22,7 +22,7 @@ export const run = async (inputs: Inputs): Promise<void> => {
   await git.setConfigUser(authorName, authorEmail)
 
   if (github.context.eventName === 'pull_request') {
-    return await handlePullRequestEvent(inputs)
+    return await handlePullRequestEvent(inputs, github.context as PullRequestContext)
   }
   await handleOtherEvent(inputs)
 }
