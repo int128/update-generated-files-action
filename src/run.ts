@@ -24,5 +24,5 @@ export const run = async (inputs: Inputs): Promise<void> => {
   if (github.context.eventName === 'pull_request') {
     return await handlePullRequestEvent(inputs, github.context as PullRequestContext)
   }
-  await handleOtherEvent(inputs)
+  await handleOtherEvent(inputs, github.context)
 }
