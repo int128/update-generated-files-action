@@ -5,12 +5,12 @@ inputs:
   title:
     description: title of pull request
     required: true
-    default: Fix generated files
+    default: Follow up the generated files
   body:
     description: body of pull request
     required: true
     default: |
-      This pull request will fix the consistency of generated files.
+      This pull request will fix the generated files.
   token:
     description: GitHub token to create a pull request
     required: true
