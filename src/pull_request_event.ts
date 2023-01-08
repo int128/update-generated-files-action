@@ -38,7 +38,7 @@ export const handlePullRequestEvent = async (inputs: Inputs, context: PullReques
     await octokit.rest.actions.createWorkflowDispatch({
       owner: context.repo.owner,
       repo: context.repo.repo,
-      ref: context.ref,
+      ref: head,
       workflow_id,
     })
   }
