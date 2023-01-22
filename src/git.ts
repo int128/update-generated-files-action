@@ -25,6 +25,7 @@ type UpdateBranchInput = {
 export const updateBranch = async (input: UpdateBranchInput) => {
   await exec.exec('git', ['add', '.'])
   await exec.exec('git', ['commit', '-m', input.commitMessage])
+  await exec.exec('git', ['log', '--max-count=10', '--graph', '--decorate', '--pretty=fuller', '--color=always'])
   await execWithToken(input.token, ['push', 'origin', `HEAD:${input.ref}`])
 }
 
@@ -37,8 +38,8 @@ type CreateBranchInput = {
 export const createBranch = async (input: CreateBranchInput) => {
   await exec.exec('git', ['checkout', '-b', input.branch])
   await exec.exec('git', ['add', '.'])
-  await exec.exec('git', ['status'])
   await exec.exec('git', ['commit', '-m', input.commitMessage])
+  await exec.exec('git', ['log', '--max-count=10', '--graph', '--decorate', '--pretty=fuller', '--color=always'])
   await execWithToken(input.token, ['push', 'origin', input.branch])
 }
 
@@ -61,3 +62,5 @@ export const status = async (): Promise<string> => {
   const o = await exec.getExecOutput('git', ['status', '--porcelain'])
   return o.stdout.trim()
 }
+
+
