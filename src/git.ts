@@ -25,7 +25,7 @@ type UpdateBranchInput = {
 export const updateBranch = async (input: UpdateBranchInput) => {
   await exec.exec('git', ['add', '.'])
   await exec.exec('git', ['commit', '-m', input.commitMessage])
-  await exec.exec('git', ['log', '--graph', '--decorate', '--stat', '--pretty=fuller', '--max-count=10'])
+  await exec.exec('git', ['log', '--max-count=10', '--graph', '--decorate', '--pretty=fuller', '--color=always'])
   await execWithToken(input.token, ['push', 'origin', `HEAD:${input.ref}`])
 }
 
@@ -39,7 +39,7 @@ export const createBranch = async (input: CreateBranchInput) => {
   await exec.exec('git', ['checkout', '-b', input.branch])
   await exec.exec('git', ['add', '.'])
   await exec.exec('git', ['commit', '-m', input.commitMessage])
-  await exec.exec('git', ['log', '--graph', '--decorate', '--stat', '--pretty=fuller', '--max-count=10'])
+  await exec.exec('git', ['log', '--max-count=10', '--graph', '--decorate', '--pretty=fuller', '--color=always'])
   await execWithToken(input.token, ['push', 'origin', input.branch])
 }
 
