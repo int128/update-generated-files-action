@@ -62,3 +62,5 @@ export const status = async (): Promise<string> => {
   const o = await exec.getExecOutput('git', ['status', '--porcelain'])
   return o.stdout.trim()
 }
+
+
