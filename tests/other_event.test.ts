@@ -34,6 +34,7 @@ test('other event', async () => {
     {
       title: 'Follow up the generated files',
       body: 'Body',
+      dispatchWorkflows: [],
       token: 'GITHUB_TOKEN',
     },
     {

@@ -10,6 +10,7 @@ const authorEmail = '41898282+github-actions[bot]@users.noreply.github.com'
 export type Inputs = {
   title: string
   body: string
+  dispatchWorkflows: string[]
   token: string
 }
 

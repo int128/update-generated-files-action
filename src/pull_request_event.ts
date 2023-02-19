@@ -1,5 +1,6 @@
 import * as core from '@actions/core'
 import * as git from './git'
+import * as github from '@actions/github'
 import { Inputs } from './run'
 import { Context } from '@actions/github/lib/context'
 import { WebhookPayload } from '@actions/github/lib/interfaces'
@@ -15,6 +16,7 @@ export type PullRequestContext = Pick<Context, 'ref' | 'workflow' | 'job' | 'run
 }
 
 export const handlePullRequestEvent = async (inputs: Inputs, context: PullRequestContext) => {
+  const octokit = github.getOctokit(inputs.token)
   if (context.payload.pull_request === undefined) {
     throw new Error(`context.payload.pull_request is undefined`)
   }
@@ -30,6 +32,16 @@ export const handlePullRequestEvent = async (inputs: Inputs, context: PullReques
 
   core.summary.addRaw(`Added a commit. CI should pass on the new commit.`)
   await core.summary.write()
+
+  for (const workflow_id of inputs.dispatchWorkflows) {
+    core.info(`Creating a workflow dispatch to ${workflow_id}`)
+    await octokit.rest.actions.createWorkflowDispatch({
+      owner: context.repo.owner,
+      repo: context.repo.repo,
+      ref: head,
+      workflow_id,
+    })
+  }
 
   if (context.payload.action === 'opened' || context.payload.action === 'synchronize') {
     // fail if the head ref is outdated
