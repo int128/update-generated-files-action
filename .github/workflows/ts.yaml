@@ -30,10 +30,23 @@ jobs:
           cache: yarn
       - run: yarn
       - run: yarn lint
-      - run: yarn format
       - run: yarn test
       - run: yarn build
       - run: yarn package
 
       - name: update-generated-files
         uses: ./
+
+  generate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 16
+          cache: yarn
+      - run: yarn
+      - run: yarn lint --fix
+      - run: yarn format
+      - uses: int128/update-generated-files-action@v2
