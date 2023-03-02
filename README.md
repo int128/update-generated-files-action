@@ -16,6 +16,11 @@ on:
 jobs:
   generate:
     runs-on: ubuntu-latest
+    permissions:
+      # required to push a commit
+      contents: write
+      # required to create a pull request
+      pull-requests: write
     steps:
       - uses: actions/checkout@v3
 
