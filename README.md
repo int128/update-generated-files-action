@@ -39,6 +39,14 @@ This action adds the following commits into the pull request:
 
 <img width="880" alt="image" src="https://user-images.githubusercontent.com/321266/222303746-df15d6ea-5aba-446d-967c-23a1326a2cdf.png">
 
+You can change the commit message.
+
+```yaml
+      - uses: int128/update-generated-files-action@v2
+        with:
+          commit-message: "Fix: yarn graphql-codegen"
+```
+
 ### On other events
 
 When the workflow is run on other events such as `push` or `schedule`, this action creates a new pull request with the change.
@@ -59,6 +67,7 @@ You can change the title or body of pull request.
         with:
           title: Regenerate graphql code
           body: Updated by `yarn graphql-codegen`
+          commit-message: "Fix: yarn graphql-codegen"
 ```
 
 ## Notes
@@ -139,6 +148,8 @@ gitGraph
 
 | Name | Default | Description
 |------|----------|------------
+| `commit-message` | see action.yaml | Commit messgae
+| `commit-message-footer` | see action.yaml | Footer of commit message
 | `title` | see action.yaml | Title of pull request
 | `body` | see action.yaml | Body of pull request
 | `token` | `github.token` | GitHub token
