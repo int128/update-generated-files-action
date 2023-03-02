@@ -12,7 +12,7 @@ export const handleOtherEvent = async (inputs: Inputs, context: PartialContext) 
   core.info(`Creating a head branch ${head}`)
   await git.createBranch({
     branch: head,
-    commitMessage: inputs.commitMessage,
+    commitMessage: `${inputs.commitMessage}\n\n${inputs.commitMessageFooter}`,
     token: inputs.token,
   })
 
@@ -23,7 +23,7 @@ export const handleOtherEvent = async (inputs: Inputs, context: PartialContext) 
     base,
     head,
     title: inputs.title,
-    body: `${inputs.body}\n\n----\n\n${inputs.commitMessage}`,
+    body: `${inputs.body}\n\n----\n\n${inputs.commitMessage}\n${inputs.commitMessageFooter}`,
   })
   core.info(`Created ${pull.html_url}`)
   core.summary.addHeading(`Created a pull request: ${inputs.title}`)

@@ -24,7 +24,7 @@ export const handlePullRequestEvent = async (inputs: Inputs, context: PullReques
   await git.fetchBranch({ ref: context.ref, depth: 2, token: inputs.token })
   await git.updateBranch({
     ref: `refs/heads/${head}`,
-    commitMessage: inputs.commitMessage,
+    commitMessage: `${inputs.commitMessage}\n\n${inputs.commitMessageFooter}`,
     token: inputs.token,
   })
 
