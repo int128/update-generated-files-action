@@ -1,6 +1,7 @@
 # update-generated-files-action [![ts](https://github.com/int128/update-generated-files-action/actions/workflows/ts.yaml/badge.svg)](https://github.com/int128/update-generated-files-action/actions/workflows/ts.yaml)
 
-This is an action to push a commit to update generated files, such as Prettier, gofmt, OpenAPI Generator or GraphQL Code Generator.
+This is an action to update generated files, such as Prettier, ESLint, gofmt, go mod tidy, OpenAPI Generator or GraphQL Code Generator.
+It pushes the change to the head branch of pull request, i.e., runs `git commit && git push origin head`.
 
 ## Getting Started
 
@@ -158,3 +159,7 @@ gitGraph
 | `title` | see action.yaml | Title of pull request
 | `body` | see action.yaml | Body of pull request
 | `token` | `github.token` | GitHub token
+
+### Outputs
+
+None.
