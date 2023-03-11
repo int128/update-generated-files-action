@@ -12,5 +12,3 @@ const main = async (): Promise<void> => {
 }
 
 main().catch((e) => core.setFailed(e instanceof Error ? e : String(e)))
-
-
