@@ -20,9 +20,6 @@ export const handlePullRequestEvent = async (inputs: Inputs, context: PullReques
   }
   const head = context.payload.pull_request.head.ref
 
-
-
-  
   core.info(`Updating the head branch ${head}`)
   await git.fetchBranch({ ref: context.ref, depth: 2, token: inputs.token })
   await git.updateBranch({
