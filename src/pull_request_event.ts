@@ -28,9 +28,6 @@ export const handlePullRequestEvent = async (inputs: Inputs, context: PullReques
     token: inputs.token,
   })
 
-
-
-  
   core.summary.addRaw(`Added a commit. CI should pass on the new commit.`)
   await core.summary.write()
 
