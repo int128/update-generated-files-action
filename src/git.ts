@@ -6,28 +6,49 @@ export const setConfigUser = async (name: string, email: string) => {
   await exec.exec('git', ['config', 'user.email', email])
 }
 
-type FetchBranchInput = {
-  ref: string
+export const getCurrentSHA = async (): Promise<string> => {
+  const { stdout } = await exec.getExecOutput('git', ['rev-parse', 'HEAD'])
+  return stdout.trim()
+}
+
+export const showGraph = async () =>
+  await exec.exec('git', ['log', '--max-count=10', '--graph', '--decorate', '--pretty=fuller', '--color=always'])
+
+export const checkout = async (sha: string) => await exec.exec('git', ['checkout', sha])
+
+export const merge = async (sha: string) =>
+  await exec.exec('git', ['merge', '--no-ff', sha], { ignoreReturnCode: true })
+
+export const mergeAbort = async () => await exec.exec('git', ['merge', '--abort'])
+
+export const stash = async () => {
+  await exec.exec('git', ['add', '.'])
+  await exec.exec('git', ['stash'])
+}
+
+export const stashPop = async () => await exec.exec('git', ['stash', 'pop'])
+
+export const commit = async (message: string) => {
+  await exec.exec('git', ['add', '.'])
+  await exec.exec('git', ['commit', '-m', message])
+}
+
+type FetchInput = {
+  refspec: string
   depth: number
   token: string
 }
 
-export const fetchBranch = async (input: FetchBranchInput) => {
-  await execWithToken(input.token, ['fetch', `--depth=${input.depth}`, 'origin', input.ref])
-}
+export const fetch = async (input: FetchInput) =>
+  await execWithToken(input.token, ['fetch', 'origin', `--depth=${input.depth}`, input.refspec])
 
-type UpdateBranchInput = {
+type PushInput = {
   ref: string
-  commitMessage: string
   token: string
 }
 
-export const updateBranch = async (input: UpdateBranchInput) => {
-  await exec.exec('git', ['add', '.'])
-  await exec.exec('git', ['commit', '-m', input.commitMessage])
-  await exec.exec('git', ['log', '--max-count=10', '--graph', '--decorate', '--pretty=fuller', '--color=always'])
+export const push = async (input: PushInput) =>
   await execWithToken(input.token, ['push', 'origin', `HEAD:${input.ref}`])
-}
 
 type CreateBranchInput = {
   branch: string
@@ -43,7 +64,7 @@ export const createBranch = async (input: CreateBranchInput) => {
   await execWithToken(input.token, ['push', 'origin', input.branch])
 }
 
-const execWithToken = async (token: string, args: readonly string[] = []) => {
+const execWithToken = async (token: string, args: readonly string[]) => {
   const credentials = Buffer.from(`x-access-token:${token}`).toString('base64')
   core.setSecret(credentials)
   return await exec.exec('git', [
