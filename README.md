@@ -104,7 +104,7 @@ To trigger a workflow on the new commit, you need to set a personal access token
 
 ### Merge commit or Head commit
 
-By default `actions/checkout` checks out [the merge branch](https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#pull_request), this action adds a commit onto the merge commit.
+By default, `actions/checkout` checks out [the merge branch](https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#pull_request), this action adds a commit onto the merge commit.
 
 Here is a diagram of the commit graph.
 
