@@ -18,8 +18,6 @@ export type PullRequestContext = Pick<Context, 'ref' | 'sha'> & {
   }
 }
 
-
-
 export const handlePullRequestEvent = async (inputs: Inputs, context: PullRequestContext) => {
   if (context.payload.pull_request === undefined) {
     throw new Error(`context.payload.pull_request is undefined`)
