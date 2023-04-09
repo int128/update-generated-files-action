@@ -12,7 +12,7 @@ export const getCurrentSHA = async (): Promise<string> => {
 }
 
 export const showGraph = async () =>
-  await exec.exec('git', ['log', '--max-count=10', '--graph', '--decorate', '--pretty=fuller', '--color=always'])
+  await exec.exec('git', ['log', '--max-count=10', '--graph', '--decorate', '--pretty=oneline', '--color=always'])
 
 export const checkout = async (sha: string) => await exec.exec('git', ['checkout', sha])
 
