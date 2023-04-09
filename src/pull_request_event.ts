@@ -20,7 +20,6 @@ export type PullRequestContext = Pick<Context, 'ref' | 'sha'> & {
 
 
 
-
 export const handlePullRequestEvent = async (inputs: Inputs, context: PullRequestContext) => {
   if (context.payload.pull_request === undefined) {
     throw new Error(`context.payload.pull_request is undefined`)
@@ -32,16 +31,16 @@ export const handlePullRequestEvent = async (inputs: Inputs, context: PullReques
   if (currentSHA === context.sha) {
     const base = context.payload.pull_request.base.sha
     const head = context.payload.pull_request.head.sha
-    core.info(`Re-merging base=${base}, head=${head}`)
-    await git.fetch({ refspec: head, depth: 1, token: inputs.token })
-    await git.checkout(head)
+    core.info(`Re-merging\nbase=${base}\nhead=${head}`)
     for (let depth = 50; depth < 1000; depth += 50) {
-      await git.showGraph()
-      if ((await git.merge(base)) === 0) {
+      if (await git.canMerge(base, head)) {
         break
       }
-      await git.fetch({ refspec: head, depth, token: inputs.token })
+      await git.showGraph()
+      await git.fetch({ refs: [base, head], depth, token: inputs.token })
     }
+    await git.checkout(head)
+    await git.merge(base)
   }
 
   const head = context.payload.pull_request.head.ref

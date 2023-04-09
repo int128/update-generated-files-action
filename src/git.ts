@@ -16,10 +16,10 @@ export const showGraph = async () =>
 
 export const checkout = async (sha: string) => await exec.exec('git', ['checkout', sha])
 
-export const merge = async (sha: string) =>
-  await exec.exec('git', ['merge', '--no-ff', sha], { ignoreReturnCode: true })
+export const merge = async (sha: string) => await exec.exec('git', ['merge', '--no-ff', sha])
 
-export const mergeAbort = async () => await exec.exec('git', ['merge', '--abort'])
+export const canMerge = async (base: string, head: string): Promise<boolean> =>
+  (await exec.exec('git', ['merge-base', base, head], { ignoreReturnCode: true })) === 0
 
 export const stash = async () => {
   await exec.exec('git', ['add', '.'])
@@ -34,13 +34,13 @@ export const commit = async (message: string) => {
 }
 
 type FetchInput = {
-  refspec: string
+  refs: string[]
   depth: number
   token: string
 }
 
 export const fetch = async (input: FetchInput) =>
-  await execWithToken(input.token, ['fetch', 'origin', `--depth=${input.depth}`, input.refspec])
+  await execWithToken(input.token, ['fetch', 'origin', `--depth=${input.depth}`, ...input.refs])
 
 type PushInput = {
   ref: string
