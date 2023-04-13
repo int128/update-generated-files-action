@@ -16,7 +16,7 @@ export const handleOtherEvent = async (inputs: Inputs, context: PartialContext) 
     token: inputs.token,
   })
 
-  const base = context.ref.split("/").slice(2).join("/") // 'ref/heads/x/y/z' => 'x/y/z'
+  const base = context.ref.split('/').slice(2).join('/') // 'ref/heads/x/y/z' => 'x/y/z'
   core.info(`Creating a pull request for ${base} branch`)
   const { data: pull } = await octokit.rest.pulls.create({
     ...context.repo,
