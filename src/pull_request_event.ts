@@ -4,7 +4,7 @@ import { Inputs } from './run'
 import { Context } from '@actions/github/lib/context'
 import { WebhookPayload } from '@actions/github/lib/interfaces'
 
-export type PullRequestContext = Pick<Context, 'ref' | 'sha'> & {
+export type PullRequestContext = Pick<Context, 'sha'> & {
   payload: Pick<WebhookPayload, 'action'> & {
     pull_request?: {
       base: {
@@ -29,11 +29,14 @@ export const handlePullRequestEvent = async (inputs: Inputs, context: PullReques
   if (currentSHA === context.sha) {
     const base = context.payload.pull_request.base.sha
     const head = context.payload.pull_request.head.sha
-    core.info(`Re-merging\nbase=${base}\nhead=${head}`)
+    core.info(`Re-merging base branch into head branch`)
+    core.info(`base: ${base}`)
+    core.info(`head: ${head}`)
     for (let depth = 50; depth < 1000; depth += 50) {
       if (await git.canMerge(base, head)) {
         break
       }
+      core.info(`Fetching more commits (depth ${depth})`)
       await git.showGraph()
       await git.fetch({ refs: [base, head], depth, token: inputs.token })
     }
