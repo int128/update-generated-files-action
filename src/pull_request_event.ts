@@ -50,6 +50,9 @@ export const handlePullRequestEvent = async (inputs: Inputs, context: PullReques
   await git.commit(`${inputs.commitMessage}\n\n${inputs.commitMessageFooter}`)
   await git.push({ ref: `refs/heads/${head}`, token: inputs.token })
 
+
+
+  
   core.summary.addRaw(`Added a commit. CI should pass on the new commit.`)
   await core.summary.write()
 
