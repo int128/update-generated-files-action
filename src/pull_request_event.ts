@@ -18,23 +18,25 @@ export type PullRequestContext = Pick<Context, 'sha'> & {
   }
 }
 
-
-
 export const handlePullRequestEvent = async (inputs: Inputs, context: PullRequestContext) => {
   if (context.payload.pull_request === undefined) {
     throw new Error(`context.payload.pull_request is undefined`)
   }
-  await git.stash()
 
   const currentSHA = await git.getCurrentSHA()
   if (currentSHA === context.sha) {
+    // If this action pushes the merge commit (refs/pull/x/merge) into the head branch,
+    // we may see the unrelated diff in the pull request diff.
+    // To avoid that issue, recreate a merge commit by base into head strategy.
+    // https://github.com/int128/update-generated-files-action/issues/351
     core.info(`Re-merging base branch into head branch`)
-    await remerge(currentSHA, inputs, context)
+    await git.stash()
+    await recreateMergeCommit(currentSHA, inputs, context)
+    await git.stashPop()
   }
 
   const headRef = context.payload.pull_request.head.ref
   core.info(`Updating the head branch ${headRef}`)
-  await git.stashPop()
   await git.commit(`${inputs.commitMessage}\n\n${inputs.commitMessageFooter}`)
   await git.showGraph()
   await git.push({ ref: `refs/heads/${headRef}`, token: inputs.token })
@@ -49,16 +51,18 @@ export const handlePullRequestEvent = async (inputs: Inputs, context: PullReques
   return
 }
 
-const remerge = async (currentSHA: string, inputs: Inputs, context: PullRequestContext) => {
+
+
+const recreateMergeCommit = async (currentSHA: string, inputs: Inputs, context: PullRequestContext) => {
   if (context.payload.pull_request === undefined) {
     throw new Error(`context.payload.pull_request is undefined`)
   }
 
-  const parents = await git.getParents(currentSHA)
+  const parentSHAs = await git.getParentSHAs(currentSHA)
   const headSHA = context.payload.pull_request.head.sha
-  const baseSHA = parents.filter((sha) => sha != headSHA).pop()
+  const baseSHA = parentSHAs.filter((sha) => sha != headSHA).pop()
   if (baseSHA === undefined) {
-    core.warning(`Could not determine base commit from parents ${String(parents)}`)
+    core.warning(`Could not determine base commit from parents ${String(parentSHAs)}`)
     return
   }
   const headRef = context.payload.pull_request.head.ref
@@ -67,17 +71,20 @@ const remerge = async (currentSHA: string, inputs: Inputs, context: PullRequestC
   core.info(`base: ${baseSHA} ${baseRef}`)
 
   for (let depth = 50; depth < 1000; depth += 50) {
-    await git.showGraph()
+    core.info(`Fetching more commits (depth ${depth})`)
+    await git.fetch({ refs: [baseSHA, headSHA], depth, token: inputs.token })
     if (await git.canMerge(baseSHA, headSHA)) {
       break
     }
-    core.info(`Fetching more commits (depth ${depth})`)
-    await git.fetch({ refs: [baseSHA, headSHA], depth, token: inputs.token })
   }
+
+  await git.showGraph()
   await git.checkout(headSHA)
+  await git.merge(
+    baseSHA,
+    `Merge branch ${baseRef} ${baseSHA} into ${headRef} ${headSHA}
 
-  await git.merge(baseSHA, `Merge ${baseRef} ${baseSHA} into ${headRef} ${headSHA}
-
-Recreated a merge commit from ${currentSHA}
-${inputs.commitMessageFooter}`)
+Recreated a merge commit from ${currentSHA} by GitHub Actions
+${inputs.commitMessageFooter}`
+  )
 }

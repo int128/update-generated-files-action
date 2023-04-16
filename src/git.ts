@@ -11,7 +11,7 @@ export const getCurrentSHA = async (): Promise<string> => {
   return stdout.trim()
 }
 
-export const getParents = async (sha: string): Promise<string[]> => {
+export const getParentSHAs = async (sha: string): Promise<string[]> => {
   const { stdout } = await exec.getExecOutput('git', ['cat-file', 'commit', sha])
   return parseParentsOfGitCatFile(stdout)
 }
