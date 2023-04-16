@@ -6,6 +6,11 @@ export const setConfigUser = async (name: string, email: string) => {
   await exec.exec('git', ['config', 'user.email', email])
 }
 
+export const status = async (): Promise<string> => {
+  const { stdout } = await exec.getExecOutput('git', ['status', '--porcelain'])
+  return stdout.trim()
+}
+
 export const getCurrentSHA = async (): Promise<string> => {
   const { stdout } = await exec.getExecOutput('git', ['rev-parse', 'HEAD'])
   return stdout.trim()
@@ -64,20 +69,6 @@ type PushInput = {
 export const push = async (input: PushInput) =>
   await execWithToken(input.token, ['push', 'origin', `HEAD:${input.ref}`])
 
-type CreateBranchInput = {
-  branch: string
-  commitMessage: string
-  token: string
-}
-
-export const createBranch = async (input: CreateBranchInput) => {
-  await exec.exec('git', ['checkout', '-b', input.branch])
-  await exec.exec('git', ['add', '.'])
-  await exec.exec('git', ['commit', '-m', input.commitMessage])
-  await exec.exec('git', ['log', '--max-count=10', '--graph', '--decorate', '--pretty=fuller', '--color=always'])
-  await execWithToken(input.token, ['push', 'origin', input.branch])
-}
-
 const execWithToken = async (token: string, args: readonly string[]) => {
   const credentials = Buffer.from(`x-access-token:${token}`).toString('base64')
   core.setSecret(credentials)
@@ -91,9 +82,4 @@ const execWithToken = async (token: string, args: readonly string[]) => {
     `http.https://github.com/.extraheader=AUTHORIZATION: basic ${credentials}`,
     ...args,
   ])
-}
-
-export const status = async (): Promise<string> => {
-  const o = await exec.getExecOutput('git', ['status', '--porcelain'])
-  return o.stdout.trim()
 }
