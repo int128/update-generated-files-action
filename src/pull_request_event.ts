@@ -51,8 +51,6 @@ export const handlePullRequestEvent = async (inputs: Inputs, context: PullReques
   return
 }
 
-
-
 const recreateMergeCommit = async (currentSHA: string, inputs: Inputs, context: PullRequestContext) => {
   if (context.payload.pull_request === undefined) {
     throw new Error(`context.payload.pull_request is undefined`)
