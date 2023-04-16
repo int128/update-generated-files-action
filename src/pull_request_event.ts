@@ -7,9 +7,6 @@ import { WebhookPayload } from '@actions/github/lib/interfaces'
 export type PullRequestContext = Pick<Context, 'sha'> & {
   payload: Pick<WebhookPayload, 'action'> & {
     pull_request?: {
-      base: {
-        sha: string
-      }
       head: {
         sha: string
         ref: string
@@ -27,21 +24,9 @@ export const handlePullRequestEvent = async (inputs: Inputs, context: PullReques
 
   const currentSHA = await git.getCurrentSHA()
   if (currentSHA === context.sha) {
-    const base = context.payload.pull_request.base.sha
-    const head = context.payload.pull_request.head.sha
     core.info(`Re-merging base branch into head branch`)
-    core.info(`base: ${base}`)
-    core.info(`head: ${head}`)
-    for (let depth = 50; depth < 1000; depth += 50) {
-      if (await git.canMerge(base, head)) {
-        break
-      }
-      core.info(`Fetching more commits (depth ${depth})`)
-      await git.showGraph()
-      await git.fetch({ refs: [base, head], depth, token: inputs.token })
-    }
-    await git.checkout(head)
-    await git.merge(base)
+    const headSHA = context.payload.pull_request.head.sha
+    await remerge(currentSHA, headSHA, inputs.token)
   }
 
   const head = context.payload.pull_request.head.ref
@@ -58,4 +43,25 @@ export const handlePullRequestEvent = async (inputs: Inputs, context: PullReques
     throw new Error(`Added a commit. CI should pass on the new commit.`)
   }
   return
+}
+
+const remerge = async (currentSHA: string, headSHA: string, token: string) => {
+  const parents = await git.getParents(currentSHA)
+  const baseSHA = parents.filter((sha) => sha != headSHA).pop()
+  if (baseSHA === undefined) {
+    core.warning(`Could not determine base commit from parents ${String(parents)}`)
+    return
+  }
+  core.info(`base commit: ${baseSHA}`)
+  core.info(`head commit: ${headSHA}`)
+  for (let depth = 50; depth < 1000; depth += 50) {
+    if (await git.canMerge(baseSHA, headSHA)) {
+      break
+    }
+    core.info(`Fetching more commits (depth ${depth})`)
+    await git.showGraph()
+    await git.fetch({ refs: [baseSHA, headSHA], depth, token })
+  }
+  await git.checkout(headSHA)
+  await git.merge(baseSHA)
 }

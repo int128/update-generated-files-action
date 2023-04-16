@@ -11,6 +11,19 @@ export const getCurrentSHA = async (): Promise<string> => {
   return stdout.trim()
 }
 
+export const getParents = async (sha: string): Promise<string[]> => {
+  const { stdout } = await exec.getExecOutput('git', ['cat-file', 'commit', sha])
+  return parseParentsOfGitCatFile(stdout)
+}
+
+export const parseParentsOfGitCatFile = (stdout: string): string[] => {
+  const parents = []
+  for (const m of stdout.matchAll(/^parent ([0-9a-f]+)/gm)) {
+    parents.push(m[1])
+  }
+  return parents
+}
+
 export const showGraph = async () =>
   await exec.exec('git', ['log', '--max-count=10', '--graph', '--decorate', '--pretty=oneline', '--color=always'])
 
