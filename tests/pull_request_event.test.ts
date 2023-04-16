@@ -19,6 +19,9 @@ describe('pull request event', () => {
     payload: {
       action: 'dummy',
       pull_request: {
+        base: {
+          ref: 'main',
+        },
         head: {
           ref: 'topic',
           sha: '0123456789abcdef-head',

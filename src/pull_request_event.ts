@@ -7,6 +7,9 @@ import { WebhookPayload } from '@actions/github/lib/interfaces'
 export type PullRequestContext = Pick<Context, 'sha'> & {
   payload: Pick<WebhookPayload, 'action'> & {
     pull_request?: {
+      base: {
+        ref: string
+      }
       head: {
         sha: string
         ref: string
@@ -26,8 +29,7 @@ export const handlePullRequestEvent = async (inputs: Inputs, context: PullReques
   const currentSHA = await git.getCurrentSHA()
   if (currentSHA === context.sha) {
     core.info(`Re-merging base branch into head branch`)
-    const headSHA = context.payload.pull_request.head.sha
-    await remerge(currentSHA, headSHA, inputs)
+    await remerge(currentSHA, inputs, context)
   }
 
   const headRef = context.payload.pull_request.head.ref
@@ -47,15 +49,23 @@ export const handlePullRequestEvent = async (inputs: Inputs, context: PullReques
   return
 }
 
-const remerge = async (currentSHA: string, headSHA: string, inputs: Inputs) => {
+const remerge = async (currentSHA: string, inputs: Inputs, context: PullRequestContext) => {
+  if (context.payload.pull_request === undefined) {
+    throw new Error(`context.payload.pull_request is undefined`)
+  }
+
   const parents = await git.getParents(currentSHA)
+  const headSHA = context.payload.pull_request.head.sha
   const baseSHA = parents.filter((sha) => sha != headSHA).pop()
   if (baseSHA === undefined) {
     core.warning(`Could not determine base commit from parents ${String(parents)}`)
     return
   }
-  core.info(`base commit: ${baseSHA}`)
-  core.info(`head commit: ${headSHA}`)
+  const headRef = context.payload.pull_request.head.ref
+  const baseRef = context.payload.pull_request.base.ref
+  core.info(`head: ${headSHA} ${headRef}`)
+  core.info(`base: ${baseSHA} ${baseRef}`)
+
   for (let depth = 50; depth < 1000; depth += 50) {
     await git.showGraph()
     if (await git.canMerge(baseSHA, headSHA)) {
@@ -65,7 +75,8 @@ const remerge = async (currentSHA: string, headSHA: string, inputs: Inputs) => {
     await git.fetch({ refs: [baseSHA, headSHA], depth, token: inputs.token })
   }
   await git.checkout(headSHA)
-  await git.merge(baseSHA, `Merge base ${baseSHA} into head ${headSHA}
+
+  await git.merge(baseSHA, `Merge ${baseRef} ${baseSHA} into ${headRef} ${headSHA}
 
 Recreated a merge commit from ${currentSHA}
 ${inputs.commitMessageFooter}`)
