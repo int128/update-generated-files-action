@@ -29,7 +29,8 @@ export const showGraph = async () =>
 
 export const checkout = async (sha: string) => await exec.exec('git', ['checkout', sha])
 
-export const merge = async (sha: string) => await exec.exec('git', ['merge', '--no-ff', sha])
+export const merge = async (sha: string, message: string) =>
+  await exec.exec('git', ['merge', '--no-ff', '-m', message, sha])
 
 export const canMerge = async (base: string, head: string): Promise<boolean> =>
   (await exec.exec('git', ['merge-base', base, head], { ignoreReturnCode: true })) === 0
