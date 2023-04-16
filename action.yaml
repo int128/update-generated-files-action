@@ -1,5 +1,5 @@
-name: update-generated-files
-description: git push if there is changed file(s)
+name: update-generated-files-action
+description: Push the current changes to pull request for auto-fix
 
 inputs:
   commit-message:
