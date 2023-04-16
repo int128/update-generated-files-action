@@ -37,7 +37,7 @@ jobs:
 When the workflow is run on `pull_request` event, this action adds the current change into the head branch.
 If there is no change in the current directory, this action does nothing.
 
-For the above example, if `yarn graphql-codegen` updated the code, this action adds a commit of the change.
+For example, if `yarn graphql-codegen` updated the code, this action adds a commit of the change.
 
 <img width="870" alt="image" src="https://user-images.githubusercontent.com/321266/232302693-7eace408-52be-488b-897e-27594d391611.png">
 
@@ -49,16 +49,16 @@ By default, `actions/checkout` checks out [the merge branch](https://docs.github
 
 ### On `push` or other events
 
-When the workflow is run on other events such as `push` or `schedule`, this action creates a new pull request with the change.
-If there is no change in the current directory, this action does nothing.
+When the workflow is run on other events such as `push` or `schedule`, this action creates a pull request with the current change.
+If there is no change, this action does nothing.
 
-For example, there is any change on `main` branch,
+For example, if `yarn graphql-codegen` updated the code, this action adds a commit of the change,
 
 <img width="1050" alt="image" src="https://user-images.githubusercontent.com/321266/222304713-6048e97f-9db1-4208-9bff-45892c14c47c.png">
 
-This action creates the following pull request:
+and it creates the following pull request:
 
-<img width="1230" alt="image" src="https://user-images.githubusercontent.com/321266/222304367-2b52f387-ff40-41fa-b7af-b7f68e570a13.png">
+<img width="920" alt="image" src="https://user-images.githubusercontent.com/321266/232307473-9180533d-898a-4192-a856-3cc695552162.png">
 
 ## Considerations
 
