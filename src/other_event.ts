@@ -8,15 +8,18 @@ export type PartialContext = Pick<Context, 'ref' | 'repo' | 'actor' | 'sha' | 'r
 
 export const handleOtherEvent = async (inputs: Inputs, context: PartialContext) => {
   const octokit = github.getOctokit(inputs.token)
-  const head = `update-generated-files-${context.sha}-${context.runNumber}`
-  core.info(`Creating a head branch ${head}`)
-  await git.createBranch({
-    branch: head,
-    commitMessage: `${inputs.commitMessage}\n\n${inputs.commitMessageFooter}`,
-    token: inputs.token,
-  })
 
-  const base = context.ref.split('/').slice(2).join('/') // 'ref/heads/x/y/z' => 'x/y/z'
+  if (!context.ref.startsWith('refs/heads/')) {
+    core.warning('This action handles only branch event')
+    return
+  }
+
+  const head = `update-generated-files-${context.sha}-${context.runNumber}`
+  core.info(`Creating a new branch ${head}`)
+  await git.commit(`${inputs.commitMessage}\n\n${inputs.commitMessageFooter}`)
+  await git.push({ ref: `refs/heads/${head}`, token: inputs.token })
+
+  const base = context.ref.replace(/^refs\/heads\//, '')
   core.info(`Creating a pull request for ${base} branch`)
   const { data: pull } = await octokit.rest.pulls.create({
     ...context.repo,
