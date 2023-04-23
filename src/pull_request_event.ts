@@ -23,6 +23,15 @@ export const handlePullRequestEvent = async (inputs: Inputs, context: PullReques
     throw new Error(`context.payload.pull_request is undefined`)
   }
 
+  const headSHA = context.payload.pull_request.head.sha
+  await git.fetch({ refs: [headSHA], depth: 5, token: inputs.token })
+  const lastAuthorNames = await git.getAuthorNameOfCommits(headSHA, 5)
+  if (lastAuthorNames.every((authorName) => authorName == git.authorName)) {
+    throw new Error(`This action has been called repeatedly. Stop to prevent infinite loop.`)
+  }
+
+
+
   const currentSHA = await git.getCurrentSHA()
   if (currentSHA === context.sha) {
     // If this action pushes the merge commit (refs/pull/x/merge) into the head branch,
