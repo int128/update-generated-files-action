@@ -4,6 +4,8 @@ import { Inputs } from './run'
 import { Context } from '@actions/github/lib/context'
 import { WebhookPayload } from '@actions/github/lib/interfaces'
 
+const LIMIT_REPEATED_COMMITS = 5
+
 export type PullRequestContext = Pick<Context, 'sha'> & {
   payload: Pick<WebhookPayload, 'action'> & {
     pull_request?: {
@@ -24,10 +26,12 @@ export const handlePullRequestEvent = async (inputs: Inputs, context: PullReques
   }
 
   const headSHA = context.payload.pull_request.head.sha
-  await git.fetch({ refs: [headSHA], depth: 5, token: inputs.token })
-  const lastAuthorNames = await git.getAuthorNameOfCommits(headSHA, 5)
-  if (lastAuthorNames.every((authorName) => authorName == git.authorName)) {
-    throw new Error(`This action has been called repeatedly. Stop to prevent infinite loop.`)
+  await git.fetch({ refs: [headSHA], depth: LIMIT_REPEATED_COMMITS, token: inputs.token })
+  const lastAuthorNames = await git.getAuthorNameOfCommits(headSHA, LIMIT_REPEATED_COMMITS)
+  if (lastAuthorNames.every((authorName) => authorName == git.AUTHOR_NAME)) {
+    throw new Error(
+      `This action has been called ${LIMIT_REPEATED_COMMITS} times. Stop the job to prevent infinite loop.`
+    )
   }
 
   const currentSHA = await git.getCurrentSHA()

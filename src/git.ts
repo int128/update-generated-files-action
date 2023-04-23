@@ -1,12 +1,12 @@
 import * as core from '@actions/core'
 import * as exec from '@actions/exec'
 
-export const authorName = 'update-generated-files-action'
-export const authorEmail = '41898282+github-actions[bot]@users.noreply.github.com'
+export const AUTHOR_NAME = 'update-generated-files-action'
+export const AUTHOR_EMAIL = '41898282+github-actions[bot]@users.noreply.github.com'
 
 export const configureAuthor = async () => {
-  await exec.exec('git', ['config', 'user.name', authorName])
-  await exec.exec('git', ['config', 'user.email', authorEmail])
+  await exec.exec('git', ['config', 'user.name', AUTHOR_NAME])
+  await exec.exec('git', ['config', 'user.email', AUTHOR_EMAIL])
 }
 
 export const status = async (): Promise<string> => {
