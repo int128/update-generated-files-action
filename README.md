@@ -47,6 +47,8 @@ Because the workflow should pass on the new commit, this action exits with the f
 
 By default, `actions/checkout` checks out [the merge branch](https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#pull_request). This action works on both merge branch or head branch.
 
+If the last 5 commits are added by this action, it exits with an error to prevent the infinite loop.
+
 ### On `push` or other events
 
 When the workflow is run on other events such as `push` or `schedule`, this action creates a pull request with the current change.
