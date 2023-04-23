@@ -71,7 +71,9 @@ https://github.com/int128/update-generated-files-action/actions/runs/4309709120`
   test('last authors are this action', async () => {
     jest
       .mocked(git.getAuthorNameOfCommits)
-      .mockResolvedValue([git.AUTHOR_NAME, git.AUTHOR_NAME, git.AUTHOR_NAME, git.AUTHOR_NAME, git.AUTHOR_NAME])
-    await expect(handlePullRequestEvent(inputs, context)).rejects.toThrow()
+      .mockResolvedValue([
+        git.AUTHOR_NAME, git.AUTHOR_NAME, git.AUTHOR_NAME, git.AUTHOR_NAME, git.AUTHOR_NAME,
+      ])
+    await expect(handlePullRequestEvent(inputs, context)).rejects.toThrow(/infinite loop/)
   })
 })
