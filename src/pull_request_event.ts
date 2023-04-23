@@ -30,8 +30,6 @@ export const handlePullRequestEvent = async (inputs: Inputs, context: PullReques
     throw new Error(`This action has been called repeatedly. Stop to prevent infinite loop.`)
   }
 
-
-
   const currentSHA = await git.getCurrentSHA()
   if (currentSHA === context.sha) {
     // If this action pushes the merge commit (refs/pull/x/merge) into the head branch,
