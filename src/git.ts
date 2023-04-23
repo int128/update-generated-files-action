@@ -1,14 +1,22 @@
 import * as core from '@actions/core'
 import * as exec from '@actions/exec'
 
-export const setConfigUser = async (name: string, email: string) => {
-  await exec.exec('git', ['config', 'user.name', name])
-  await exec.exec('git', ['config', 'user.email', email])
+export const AUTHOR_NAME = 'update-generated-files-action'
+export const AUTHOR_EMAIL = '41898282+github-actions[bot]@users.noreply.github.com'
+
+export const configureAuthor = async () => {
+  await exec.exec('git', ['config', 'user.name', AUTHOR_NAME])
+  await exec.exec('git', ['config', 'user.email', AUTHOR_EMAIL])
 }
 
 export const status = async (): Promise<string> => {
   const { stdout } = await exec.getExecOutput('git', ['status', '--porcelain'])
   return stdout.trim()
+}
+
+export const getAuthorNameOfCommits = async (ref: string, depth: number): Promise<string[]> => {
+  const { stdout } = await exec.getExecOutput('git', ['log', '--format=%an', `--max-count=${depth}`, ref])
+  return stdout.trim().split('\n')
 }
 
 export const getCurrentSHA = async (): Promise<string> => {
