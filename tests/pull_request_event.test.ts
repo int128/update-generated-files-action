@@ -12,6 +12,7 @@ describe('pull request event', () => {
     commitMessageFooter: 'https://github.com/int128/update-generated-files-action/actions/runs/4309709120',
     title: 'Follow up the generated files',
     body: 'Body',
+    reviewers: [],
     token: 'GITHUB_TOKEN',
   }
   const context = {
