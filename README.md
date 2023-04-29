@@ -1,7 +1,15 @@
 # update-generated-files-action [![ts](https://github.com/int128/update-generated-files-action/actions/workflows/ts.yaml/badge.svg)](https://github.com/int128/update-generated-files-action/actions/workflows/ts.yaml)
 
-This is an action to update generated files, such as Prettier, ESLint, gofmt, go mod tidy, OpenAPI Generator or GraphQL Code Generator.
-It pushes the change to the head branch of pull request, i.e., runs `git commit && git push origin head`.
+This is an action for auto-fix of generated files.
+It pushes the current change to the pull request, i.e., `git commit && git push origin`.
+
+Here are the example use-cases.
+
+- Format code such as Prettier, dprint or `gofmt`
+- Update a lock file such as `package-lock.json`, `yarn.lock` or `go.sum`
+- ESLint with `--fix`
+- OpenAPI Generator
+- GraphQL Code Generator
 
 ## Getting Started
 
@@ -94,12 +102,12 @@ jobs:
           commit-message: "Fix: yarn graphql-codegen"
 ```
 
-## Considerations
+## Best practices
 
-### Triggering GitHub Actions
+### Triggering GitHub Actions on the new commit
 
-This action uses the default token by default, but [it does not trigger a workflow](https://docs.github.com/en/actions/using-workflows/triggering-a-workflow#triggering-a-workflow-from-a-workflow) for the new commit.
-You can reopen a pull request to trigger a workflow.
+This action uses the default token by default, but [it does not trigger a workflow](https://docs.github.com/en/actions/using-workflows/triggering-a-workflow#triggering-a-workflow-from-a-workflow) on the new commit.
+You need to reopen a pull request to trigger a workflow.
 
 To trigger a workflow on the new commit, you need to set a personal access token or GitHub App token.
 
@@ -109,7 +117,22 @@ jobs:
     steps:
       - uses: int128/update-generated-files-action@v2
         with:
-          token: ${{ secrets.YOUR_PERSONAL_ACCESS_TOKEN }}
+          token: ${{ secrets.YOUR_TOKEN }}
+```
+
+### Maintain code by team
+
+It is recommended to set **CODEOWNERS** to receive a review request when this action creates a pull request.
+Alternatively, you can set the reviewers, for example,
+
+```yaml
+jobs:
+  generate:
+    steps:
+      - uses: int128/update-generated-files-action@v2
+        with:
+          reviewers: |
+            your-organization/frontend-devs
 ```
 
 ### Working with Renovate
@@ -129,10 +152,10 @@ If the generated files are inconsistent, automerge will be stopped due to the fa
 
 | Name | Default | Description
 |------|----------|------------
-| `commit-message` | see action.yaml | Commit messgae
-| `commit-message-footer` | see action.yaml | Footer of commit message
-| `title` | see action.yaml | Title of the pull request
-| `body` | see action.yaml | Body of the pull request
+| `commit-message` | [action.yaml](action.yaml) | Commit messgae
+| `commit-message-footer` | [action.yaml](action.yaml) | Footer of commit message
+| `title` | [action.yaml](action.yaml) | Title of the pull request
+| `body` | [action.yaml](action.yaml) | Body of the pull request
 | `reviewers` | (optional) | Request reviewers for the pull request
 | `token` | `github.token` | GitHub token
 
