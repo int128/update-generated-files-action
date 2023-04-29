@@ -7,6 +7,7 @@ const main = async (): Promise<void> => {
     commitMessageFooter: core.getInput('commit-message-footer', { required: true }),
     title: core.getInput('title', { required: true }),
     body: core.getInput('body', { required: true }),
+    reviewers: core.getMultilineInput('reviewers'),
     token: core.getInput('token', { required: true }),
   })
 }

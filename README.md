@@ -45,9 +45,22 @@ Because the workflow should pass on the new commit, this action exits with the f
 
 <img width="870" alt="image" src="https://user-images.githubusercontent.com/321266/232303622-a4d7b868-5300-4dda-b1e5-9ef0e8d5985b.png">
 
-By default, `actions/checkout` checks out [the merge branch](https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#pull_request). This action works on both merge branch or head branch.
+By default, `actions/checkout` checks out [the merge branch](https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#pull_request).
+This action works on both merge branch or head branch.
 
 If the last 5 commits are added by this action, it exits with an error to prevent the infinite loop.
+
+You can customize the commit as follows:
+
+```yaml
+jobs:
+  generate:
+    steps:
+      - uses: int128/update-generated-files-action@v2
+        with:
+          # set a custom message to the new commit (optional)
+          commit-message: "Fix: yarn graphql-codegen"
+```
 
 ### On `push` or other events
 
@@ -62,6 +75,25 @@ and it creates the following pull request:
 
 <img width="920" alt="image" src="https://user-images.githubusercontent.com/321266/232307473-9180533d-898a-4192-a856-3cc695552162.png">
 
+You can customize the pull request as follows:
+
+```yaml
+jobs:
+  generate:
+    steps:
+      - uses: int128/update-generated-files-action@v2
+        with:
+          # set a custom title or body to the pull request (optional)
+          title: Regenerate graphql code
+          body: Updated by `yarn graphql-codegen`
+          # request reviewers for the pull request (optional)
+          reviewers: |
+            username
+            org/team
+          # set a custom message to the new commit (optional)
+          commit-message: "Fix: yarn graphql-codegen"
+```
+
 ## Considerations
 
 ### Triggering GitHub Actions
@@ -72,6 +104,9 @@ You can reopen a pull request to trigger a workflow.
 To trigger a workflow on the new commit, you need to set a personal access token or GitHub App token.
 
 ```yaml
+jobs:
+  generate:
+    steps:
       - uses: int128/update-generated-files-action@v2
         with:
           token: ${{ secrets.YOUR_PERSONAL_ACCESS_TOKEN }}
@@ -96,20 +131,10 @@ If the generated files are inconsistent, automerge will be stopped due to the fa
 |------|----------|------------
 | `commit-message` | see action.yaml | Commit messgae
 | `commit-message-footer` | see action.yaml | Footer of commit message
-| `title` | see action.yaml | Title of pull request
-| `body` | see action.yaml | Body of pull request
+| `title` | see action.yaml | Title of the pull request
+| `body` | see action.yaml | Body of the pull request
+| `reviewers` | (optional) | Request reviewers for the pull request
 | `token` | `github.token` | GitHub token
-
-You can change the title or body of pull request.
-For example,
-
-```yaml
-      - uses: int128/update-generated-files-action@v2
-        with:
-          title: Regenerate graphql code
-          body: Updated by `yarn graphql-codegen`
-          commit-message: "Fix: yarn graphql-codegen"
-```
 
 ### Outputs
 
