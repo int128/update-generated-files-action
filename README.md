@@ -102,6 +102,19 @@ jobs:
           commit-message: "Fix: yarn graphql-codegen"
 ```
 
+If you prefer to update the branch directly,
+
+```yaml
+jobs:
+  generate:
+    steps:
+      - uses: int128/update-generated-files-action@v2
+        with:
+          follow-up-method: fast-forward
+          # set a custom message to the new commit (optional)
+          commit-message: "Fix: yarn graphql-codegen"
+```
+
 ## Best practices
 
 ### Triggering GitHub Actions on the new commit

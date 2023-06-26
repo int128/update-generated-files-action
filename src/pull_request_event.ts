@@ -1,6 +1,5 @@
 import * as core from '@actions/core'
 import * as git from './git'
-import { Inputs } from './run'
 import { Context } from '@actions/github/lib/context'
 import { WebhookPayload } from '@actions/github/lib/interfaces'
 
@@ -18,6 +17,12 @@ export type PullRequestContext = Pick<Context, 'sha'> & {
       }
     }
   }
+}
+
+type Inputs = {
+  commitMessage: string
+  commitMessageFooter: string
+  token: string
 }
 
 export const handlePullRequestEvent = async (inputs: Inputs, context: PullRequestContext) => {
