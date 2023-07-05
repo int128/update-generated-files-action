@@ -45,7 +45,7 @@ export const handleOtherEvent = async (inputs: Inputs, context: PartialContext) 
           reviewers: r.users,
           team_reviewers: r.teams,
         }),
-      (e) => core.info(`could not request a review to ${context.actor}: ${String(e)}`)
+      (e) => core.info(`could not request a review to ${context.actor}: ${String(e)}`),
     )
   }
 
@@ -57,7 +57,7 @@ export const handleOtherEvent = async (inputs: Inputs, context: PartialContext) 
         pull_number: pull.number,
         reviewers: [context.actor],
       }),
-    (e) => core.info(`could not request a review to ${context.actor}: ${String(e)}`)
+    (e) => core.info(`could not request a review to ${context.actor}: ${String(e)}`),
   )
 
   core.info(`Adding the actor @${context.actor} to assignees`)
@@ -68,7 +68,7 @@ export const handleOtherEvent = async (inputs: Inputs, context: PartialContext) 
         issue_number: pull.number,
         assignees: [context.actor],
       }),
-    (e) => core.info(`could not assign ${context.actor}: ${String(e)}`)
+    (e) => core.info(`could not assign ${context.actor}: ${String(e)}`),
   )
 
   if (context.eventName === 'push') {
