@@ -30,7 +30,7 @@ export const handlePullRequestEvent = async (inputs: Inputs, context: PullReques
   const lastAuthorNames = await git.getAuthorNameOfCommits(headSHA, LIMIT_REPEATED_COMMITS)
   if (lastAuthorNames.every((authorName) => authorName == git.AUTHOR_NAME)) {
     throw new Error(
-      `This action has been called ${LIMIT_REPEATED_COMMITS} times. Stop the job to prevent infinite loop.`
+      `This action has been called ${LIMIT_REPEATED_COMMITS} times. Stop the job to prevent infinite loop.`,
     )
   }
 
@@ -94,6 +94,6 @@ const recreateMergeCommit = async (currentSHA: string, inputs: Inputs, context: 
     `Merge branch ${baseRef} ${baseSHA} into ${headRef} ${headSHA}
 
 Recreated a merge commit from ${currentSHA} by GitHub Actions
-${inputs.commitMessageFooter}`
+${inputs.commitMessageFooter}`,
   )
 }
