@@ -12,13 +12,24 @@ export const handleOtherEvent = async (inputs: Inputs, context: PartialContext) 
     core.warning('This action handles only branch event')
     return
   }
-  if (inputs.followUpMethod === 'pull-request') {
-    return createPull(inputs, context)
+  if (inputs.followUpMethod === 'fast-forward-or-pull-request') {
+    return fastForwardOrPull(inputs, context)
   }
   if (inputs.followUpMethod === 'fast-forward') {
     return fastForward(inputs, context)
   }
+  if (inputs.followUpMethod === 'pull-request') {
+    return createPull(inputs, context)
+  }
   throw new Error(`unknown follow-up-method: ${inputs.followUpMethod}`)
+}
+
+const fastForwardOrPull = async (inputs: Inputs, context: PartialContext) => {
+  try {
+    await fastForward(inputs, context)
+  } catch (e) {
+    await createPull(inputs, context)
+  }
 }
 
 const createPull = async (inputs: Inputs, context: PartialContext) => {
@@ -105,11 +116,12 @@ const catchRequestError = async <T, U>(f: () => Promise<T>, g: (error: RequestEr
 const LIMIT_REPEATED_COMMITS = 5
 
 const fastForward = async (inputs: Inputs, context: PartialContext) => {
+  core.info(`Updating ${context.ref} by fast-forward`)
   await git.fetch({ refs: [context.sha], depth: LIMIT_REPEATED_COMMITS, token: inputs.token })
   const lastAuthorNames = await git.getAuthorNameOfCommits(context.sha, LIMIT_REPEATED_COMMITS)
   if (lastAuthorNames.every((authorName) => authorName == git.AUTHOR_NAME)) {
     throw new Error(
-      `This action has been called ${LIMIT_REPEATED_COMMITS} times. Stop the job to prevent infinite loop.`
+      `This action has been called ${LIMIT_REPEATED_COMMITS} times. Stop the job to prevent infinite loop.`,
     )
   }
 
