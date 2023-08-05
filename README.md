@@ -73,10 +73,10 @@ jobs:
 ### On `push` or other events
 
 When the workflow is run on other events such as `push` or `schedule`,
-this action tries to add the current change by the following order:
+this action tries to apply the current change by the following order:
 
-1. Push the current change into the branch (fast-forward)
-2. Create a pull request for the branch (pull-request)
+1. Push the current change into the branch by fast-forward
+2. Create a pull request for the branch
 
 If there is no change, this action does nothing.
 
@@ -106,22 +106,6 @@ jobs:
             org/team
           # set a custom message to the new commit (optional)
           commit-message: "Fix: yarn graphql-codegen"
-```
-
-You can change the behavior as follows:
-
-```yaml
-jobs:
-  generate:
-    steps:
-      - uses: int128/update-generated-files-action@v2
-        with:
-          # push a commit to the branch by fast forward
-          follow-up-method: fast-forward
-          # create a pull request for the branch
-          follow-up-method: pull-request
-          # try fast-forward and then pull-request (default)
-          follow-up-method: fast-forward-or-pull-request
 ```
 
 ## Best practices
@@ -174,7 +158,6 @@ If the generated files are inconsistent, automerge will be stopped due to the fa
 
 | Name | Default | Description
 |------|----------|------------
-| `follow-up-method` | `fast-forward-or-pull-request` | Method to follow up a branch
 | `commit-message` | [action.yaml](action.yaml) | Commit messgae
 | `commit-message-footer` | [action.yaml](action.yaml) | Footer of commit message
 | `title` | [action.yaml](action.yaml) | Title of the pull request

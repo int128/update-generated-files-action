@@ -37,7 +37,6 @@ test('other event', async () => {
       title: 'Follow up the generated files',
       body: 'This pull request will fix the generated files.',
       reviewers: ['myname', 'awesome/myteam'],
-      followUpMethod: 'pull-request',
       token: 'GITHUB_TOKEN',
     },
     {

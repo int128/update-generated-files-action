@@ -10,7 +10,6 @@ export type Inputs = {
   title: string
   body: string
   reviewers: string[]
-  followUpMethod: string
   token: string
 }
 

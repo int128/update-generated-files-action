@@ -23,10 +23,6 @@ inputs:
   reviewers:
     description: reviewers of pull request
     required: false
-  follow-up-method:
-    description: either fast-forward-or-pull-request, fast-forward or pull-request
-    required: true
-    default: fast-forward-or-pull-request
   token:
     description: GitHub token to create a pull request
     required: true
