@@ -85,7 +85,7 @@ this action pushes a commit to `main` branch.
 
 <img width="1050" alt="image" src="https://user-images.githubusercontent.com/321266/222304713-6048e97f-9db1-4208-9bff-45892c14c47c.png">
 
-If `main` branch is protected, the action creates a pull request.
+If push was failed due to the branch protection rule, the action creates a pull request.
 
 <img width="920" alt="image" src="https://user-images.githubusercontent.com/321266/232307473-9180533d-898a-4192-a856-3cc695552162.png">
 
