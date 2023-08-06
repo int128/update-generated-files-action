@@ -31,7 +31,7 @@ const updateRefByFastForward = async (inputs: Inputs, context: PartialContext) =
   await git.fetch({ refs: [context.sha], depth: LIMIT_REPEATED_COMMITS, token: inputs.token })
   const lastAuthorNames = await git.getAuthorNameOfCommits(context.sha, LIMIT_REPEATED_COMMITS)
   if (lastAuthorNames.every((authorName) => authorName == git.AUTHOR_NAME)) {
-    core.error(`This action has been called ${LIMIT_REPEATED_COMMITS} times. It may be infinite loop`)
+    core.error(`This action has been called ${lastAuthorNames.length} times. Do not push to prevent infinite loop`)
     return false
   }
 
