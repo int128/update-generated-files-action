@@ -72,14 +72,20 @@ jobs:
 
 ### On `push` or other events
 
-When the workflow is run on other events such as `push` or `schedule`, this action creates a pull request with the current change.
+When the workflow is run on other events such as `push` or `schedule`,
+this action tries to apply the current change by the following order:
+
+1. Push the current change into the branch by fast-forward
+2. Create a pull request for the branch
+
 If there is no change, this action does nothing.
 
-For example, if `yarn graphql-codegen` updated the code, this action adds a commit of the change,
+For example, if `yarn graphql-codegen` updated the generated code in the workflow,
+this action pushes a commit to `main` branch.
 
 <img width="1050" alt="image" src="https://user-images.githubusercontent.com/321266/222304713-6048e97f-9db1-4208-9bff-45892c14c47c.png">
 
-and it creates the following pull request:
+If push was failed due to the branch protection rule, the action creates a pull request.
 
 <img width="920" alt="image" src="https://user-images.githubusercontent.com/321266/232307473-9180533d-898a-4192-a856-3cc695552162.png">
 

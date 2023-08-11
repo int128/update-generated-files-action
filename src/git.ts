@@ -72,22 +72,29 @@ export const fetch = async (input: FetchInput) =>
 type PushInput = {
   ref: string
   token: string
+  ignoreReturnCode?: boolean
 }
 
 export const push = async (input: PushInput) =>
-  await execWithToken(input.token, ['push', 'origin', `HEAD:${input.ref}`])
+  await execWithToken(input.token, ['push', 'origin', `HEAD:${input.ref}`], {
+    ignoreReturnCode: input.ignoreReturnCode,
+  })
 
-const execWithToken = async (token: string, args: readonly string[]) => {
+const execWithToken = async (token: string, args: readonly string[], options?: exec.ExecOptions) => {
   const credentials = Buffer.from(`x-access-token:${token}`).toString('base64')
   core.setSecret(credentials)
-  return await exec.exec('git', [
-    // reset extraheader set by actions/checkout
-    // https://github.com/actions/checkout/issues/162#issuecomment-590821598
-    '-c',
-    `http.https://github.com/.extraheader=`,
-    // replace the token
-    '-c',
-    `http.https://github.com/.extraheader=AUTHORIZATION: basic ${credentials}`,
-    ...args,
-  ])
+  return await exec.exec(
+    'git',
+    [
+      // reset extraheader set by actions/checkout
+      // https://github.com/actions/checkout/issues/162#issuecomment-590821598
+      '-c',
+      `http.https://github.com/.extraheader=`,
+      // replace the token
+      '-c',
+      `http.https://github.com/.extraheader=AUTHORIZATION: basic ${credentials}`,
+      ...args,
+    ],
+    options,
+  )
 }
