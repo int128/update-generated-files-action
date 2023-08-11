@@ -16,17 +16,24 @@ export const handleOtherEvent = async (inputs: Inputs, context: PartialContext) 
   }
 
   await git.commit(`${inputs.commitMessage}\n\n${inputs.commitMessageFooter}`)
+  // do not change the current HEAD from here
 
-  // do not change the current HEAD after here
   core.info(`Trying to update ${context.ref} by fast-forward`)
   if (await updateRefByFastForward(inputs, context)) {
+    if (context.eventName === 'push') {
+      throw new Error(`GitHub Actions automatically updated the generated files in ${context.ref}`)
+    }
     return
   }
+
   core.info(`Falling back to create a pull request to follow up`)
-  return await createPull(inputs, context)
+  const pullUrl = await createPull(inputs, context)
+  if (context.eventName === 'push') {
+    throw new Error(`Please merge ${pullUrl} to follow up the generated files`)
+  }
 }
 
-const updateRefByFastForward = async (inputs: Inputs, context: PartialContext) => {
+const updateRefByFastForward = async (inputs: Inputs, context: PartialContext): Promise<boolean> => {
   core.info(`Checking the last commits to prevent infinite loop`)
   await git.fetch({ refs: [context.sha], depth: LIMIT_REPEATED_COMMITS, token: inputs.token })
   const lastAuthorNames = await git.getAuthorNameOfCommits(context.sha, LIMIT_REPEATED_COMMITS)
@@ -39,7 +46,7 @@ const updateRefByFastForward = async (inputs: Inputs, context: PartialContext) =
   return code === 0
 }
 
-const createPull = async (inputs: Inputs, context: PartialContext) => {
+const createPull = async (inputs: Inputs, context: PartialContext): Promise<string> => {
   const head = `update-generated-files-${context.sha}-${context.runNumber}`
   core.info(`Creating a new branch ${head}`)
   await git.push({ ref: `refs/heads/${head}`, token: inputs.token })
@@ -96,10 +103,7 @@ const createPull = async (inputs: Inputs, context: PartialContext) => {
     (e) => core.info(`could not assign ${context.actor}: ${String(e)}`),
   )
 
-  if (context.eventName === 'push') {
-    // fail if the ref is outdated
-    throw new Error(`Please merge ${pull.html_url} to follow up the generated files`)
-  }
+  return pull.html_url
 }
 
 const splitReviewers = (reviewers: string[]) => ({
