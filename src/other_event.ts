@@ -20,6 +20,8 @@ export const handleOtherEvent = async (inputs: Inputs, context: PartialContext) 
 
   core.info(`Trying to update ${context.ref} by fast-forward`)
   if (await updateRefByFastForward(inputs, context)) {
+    core.summary.addHeading(`GitHub Actions automatically updated the generated files in ${context.ref}`)
+    await core.summary.write()
     if (context.eventName === 'push') {
       throw new Error(`GitHub Actions automatically updated the generated files in ${context.ref}`)
     }
@@ -28,6 +30,9 @@ export const handleOtherEvent = async (inputs: Inputs, context: PartialContext) 
 
   core.info(`Falling back to create a pull request to follow up`)
   const pullUrl = await createPull(inputs, context)
+  core.summary.addHeading(`Created a pull request: ${inputs.title}`)
+  core.summary.addLink(pullUrl, pullUrl)
+  await core.summary.write()
   if (context.eventName === 'push') {
     throw new Error(`Please merge ${pullUrl} to follow up the generated files`)
   }
@@ -43,7 +48,12 @@ const updateRefByFastForward = async (inputs: Inputs, context: PartialContext): 
   }
 
   const code = await git.push({ ref: context.ref, token: inputs.token, ignoreReturnCode: true })
-  return code === 0
+  if (code !== 0) {
+    core.info(`Failed to update ${context.ref} by fast-forward: git returned code ${code}`)
+    return false
+  }
+  core.info(`Updated ${context.ref} by fast-forward`)
+  return true
 }
 
 const createPull = async (inputs: Inputs, context: PartialContext): Promise<string> => {
@@ -62,9 +72,6 @@ const createPull = async (inputs: Inputs, context: PartialContext): Promise<stri
     body: `${inputs.body}\n\n----\n\n${inputs.commitMessage}\n${inputs.commitMessageFooter}`,
   })
   core.info(`Created ${pull.html_url}`)
-  core.summary.addHeading(`Created a pull request: ${inputs.title}`)
-  core.summary.addLink(`${pull.base.repo.full_name}#${pull.number}`, pull.html_url)
-  await core.summary.write()
 
   if (inputs.reviewers) {
     const r = splitReviewers(inputs.reviewers)
