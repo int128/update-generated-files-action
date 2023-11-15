@@ -167,4 +167,6 @@ If the generated files are inconsistent, automerge will be stopped due to the fa
 
 ### Outputs
 
-None.
+| Name | Description
+|------|------------
+| `pr-number` | Pull Request Number (only available when not triggered by `pull_request` event)

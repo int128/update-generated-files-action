@@ -72,6 +72,7 @@ const createPull = async (inputs: Inputs, context: PartialContext): Promise<stri
     body: `${inputs.body}\n\n----\n\n${inputs.commitMessage}\n${inputs.commitMessageFooter}`,
   })
   core.info(`Created ${pull.html_url}`)
+  core.setOutput('pr-number', pull.number)
 
   if (inputs.reviewers) {
     const r = splitReviewers(inputs.reviewers)
