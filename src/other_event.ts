@@ -88,6 +88,19 @@ const createPull = async (inputs: Inputs, context: PartialContext): Promise<stri
     )
   }
 
+  if (inputs.labels) {
+    core.info(`Adding labels ${JSON.stringify(inputs.labels)}`)
+    await catchRequestError(
+      () =>
+        octokit.rest.issues.addLabels({
+          ...context.repo,
+          issue_number: pull.number,
+          labels: inputs.labels,
+        }),
+      (e) => core.info(`could not add labels to ${pull.number}: ${String(e)}`),
+    )
+  }
+
   core.info(`Requesting a review to the actor @${context.actor}`)
   await catchRequestError(
     () =>

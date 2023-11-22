@@ -21,7 +21,10 @@ inputs:
       Hi @${{ github.actor }},
       Please merge this to fix the branch ${{ github.ref_name }} (commit ${{ github.sha }}).
   reviewers:
-    description: reviewers of pull request
+    description: reviewers of pull request (multiline)
+    required: false
+  labels:
+    description: labels of pull request (multiline)
     required: false
   token:
     description: GitHub token to create a pull request
