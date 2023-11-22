@@ -9,6 +9,7 @@ const octokitMock = {
     },
     issues: {
       addAssignees: jest.fn(),
+      addLabels: jest.fn(),
     },
   },
 }
@@ -28,6 +29,7 @@ test('follow up by fast-forward', async () => {
       title: 'Follow up the generated files',
       body: 'This pull request will fix the generated files.',
       reviewers: ['myname', 'awesome/myteam'],
+      labels: [],
       token: 'GITHUB_TOKEN',
     },
     {
@@ -81,6 +83,7 @@ test('fallback to pull-request', async () => {
       title: 'Follow up the generated files',
       body: 'This pull request will fix the generated files.',
       reviewers: ['myname', 'awesome/myteam'],
+      labels: ['mylabel'],
       token: 'GITHUB_TOKEN',
     },
     {
@@ -141,6 +144,12 @@ https://github.com/int128/update-generated-files-action/actions/runs/4309709120`
   })
   expect(octokitMock.rest.issues.addAssignees).toHaveBeenCalledWith({
     assignees: ['octocat'],
+    issue_number: 987,
+    owner: 'int128',
+    repo: 'update-generated-files-action',
+  })
+  expect(octokitMock.rest.issues.addLabels).toHaveBeenCalledWith({
+    labels: ['mylabel'],
     issue_number: 987,
     owner: 'int128',
     repo: 'update-generated-files-action',

@@ -10,6 +10,7 @@ export type Inputs = {
   title: string
   body: string
   reviewers: string[]
+  labels: string[]
   token: string
 }
 
