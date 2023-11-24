@@ -67,7 +67,7 @@ jobs:
       - uses: int128/update-generated-files-action@v2
         with:
           # set a custom message to the new commit (optional)
-          commit-message: "Fix: yarn graphql-codegen"
+          commit-message: 'Fix: yarn graphql-codegen'
 ```
 
 ### On `push` or other events
@@ -104,8 +104,11 @@ jobs:
           reviewers: |
             username
             org/team
+          # add labels to the pull request (optional)
+          labels: |
+            updated-grapgql-codegen
           # set a custom message to the new commit (optional)
-          commit-message: "Fix: yarn graphql-codegen"
+          commit-message: 'Fix: yarn graphql-codegen'
 ```
 
 ## Best practices
@@ -156,14 +159,15 @@ If the generated files are inconsistent, automerge will be stopped due to the fa
 
 ### Inputs
 
-| Name | Default | Description
-|------|----------|------------
-| `commit-message` | [action.yaml](action.yaml) | Commit messgae
-| `commit-message-footer` | [action.yaml](action.yaml) | Footer of commit message
-| `title` | [action.yaml](action.yaml) | Title of the pull request
-| `body` | [action.yaml](action.yaml) | Body of the pull request
-| `reviewers` | (optional) | Request reviewers for the pull request
-| `token` | `github.token` | GitHub token
+| Name                    | Default                    | Description                                        |
+| ----------------------- | -------------------------- | -------------------------------------------------- |
+| `commit-message`        | [action.yaml](action.yaml) | Commit messgae                                     |
+| `commit-message-footer` | [action.yaml](action.yaml) | Footer of commit message                           |
+| `title`                 | [action.yaml](action.yaml) | Title of the pull request                          |
+| `body`                  | [action.yaml](action.yaml) | Body of the pull request                           |
+| `reviewers`             | (optional)                 | Request reviewers for the pull request (multiline) |
+| `labels`                | (optional)                 | Add labels to the pull request (multiline)         |
+| `token`                 | `github.token`             | GitHub token                                       |
 
 ### Outputs
 

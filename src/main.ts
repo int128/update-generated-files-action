@@ -8,6 +8,7 @@ const main = async (): Promise<void> => {
     title: core.getInput('title', { required: true }),
     body: core.getInput('body', { required: true }),
     reviewers: core.getMultilineInput('reviewers'),
+    labels: core.getMultilineInput('labels'),
     token: core.getInput('token', { required: true }),
   })
 }
