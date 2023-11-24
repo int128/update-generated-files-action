@@ -171,6 +171,34 @@ If the generated files are inconsistent, automerge will be stopped due to the fa
 
 ### Outputs
 
-| Name | Description
-|------|------------
-| `pr-number` | Pull Request Number (only available when not triggered by `pull_request` event)
+| Name                  | Description                           |
+| --------------------- | ------------------------------------- |
+| `pull-request-number` | Number of pull request <sup>\*1</sup> |
+| `pull-request-url`    | URL of pull request <sup>\*1</sup>    |
+
+<sup>\*1</sup>: Available only when the action creates a pull request.
+
+### Exit status
+
+If the working directory does not have git-diff, this action exits successfully.
+
+If the working directory has git-diff, this action exits with the following status:
+
+- When triggered on `push` event, it exits with the failure.
+- When triggered on `opened` type of `pull_request` event, it exits with the failure.
+- When triggered on `synchronize` type of `pull_request` event, it exits with the failure.
+- Otherwise, it exits with the success.
+
+This design is because the current workflow should pass on the new commit.
+
+If you need to refer the outputs after this action, you can specify `always()` in the consequent step.
+For example,
+
+```yaml
+- uses: int128/update-generated-files-action
+  id: update-generated-files
+
+# update-generated-files-action fails when it creates a pull request
+- if: always() && steps.update-generated-files.outputs.pull-request-number != ''
+  run: gh pr ${{ steps.update-generated-files.outputs.pull-request-number }} # something to manipulate the pull request
+```

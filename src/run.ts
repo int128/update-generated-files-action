@@ -14,10 +14,18 @@ export type Inputs = {
   token: string
 }
 
-export const run = async (inputs: Inputs): Promise<void> => {
+export type Outputs = {
+  // If both value and error are returned, this field is set.
+  error?: Error
+
+  pullRequestUrl?: string
+  pullRequestNumber?: number
+}
+
+export const run = async (inputs: Inputs): Promise<Outputs> => {
   if ((await git.status()) === '') {
     core.info('Nothing to commit')
-    return
+    return {}
   }
 
   await git.configureAuthor()
@@ -25,5 +33,5 @@ export const run = async (inputs: Inputs): Promise<void> => {
   if (github.context.eventName === 'pull_request') {
     return await handlePullRequestEvent(inputs, github.context as PullRequestContext)
   }
-  await handleOtherEvent(inputs, github.context)
+  return await handleOtherEvent(inputs, github.context)
 }

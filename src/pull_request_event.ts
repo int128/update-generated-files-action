@@ -2,6 +2,7 @@ import * as core from '@actions/core'
 import * as git from './git'
 import { Context } from '@actions/github/lib/context'
 import { WebhookPayload } from '@actions/github/lib/interfaces'
+import { Outputs } from './run'
 
 const LIMIT_REPEATED_COMMITS = 5
 
@@ -25,7 +26,7 @@ type Inputs = {
   token: string
 }
 
-export const handlePullRequestEvent = async (inputs: Inputs, context: PullRequestContext) => {
+export const handlePullRequestEvent = async (inputs: Inputs, context: PullRequestContext): Promise<Outputs> => {
   if (context.payload.pull_request === undefined) {
     throw new Error(`context.payload.pull_request is undefined`)
   }
@@ -64,7 +65,7 @@ export const handlePullRequestEvent = async (inputs: Inputs, context: PullReques
     // fail if the head ref is outdated
     throw new Error(`Added a commit. CI should pass on the new commit.`)
   }
-  return
+  return {}
 }
 
 const recreateMergeCommit = async (currentSHA: string, inputs: Inputs, context: PullRequestContext) => {

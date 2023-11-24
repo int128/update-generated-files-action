@@ -1,7 +1,7 @@
 import * as core from '@actions/core'
 import * as git from './git'
 import * as github from '@actions/github'
-import { Inputs } from './run'
+import { Inputs, Outputs } from './run'
 import { Context } from '@actions/github/lib/context'
 import { RequestError } from '@octokit/request-error'
 
@@ -9,10 +9,10 @@ const LIMIT_REPEATED_COMMITS = 5
 
 export type PartialContext = Pick<Context, 'ref' | 'repo' | 'actor' | 'sha' | 'runNumber' | 'eventName'>
 
-export const handleOtherEvent = async (inputs: Inputs, context: PartialContext) => {
+export const handleOtherEvent = async (inputs: Inputs, context: PartialContext): Promise<Outputs> => {
   if (!context.ref.startsWith('refs/heads/')) {
     core.warning('This action handles only branch event')
-    return
+    return {}
   }
 
   await git.commit(`${inputs.commitMessage}\n\n${inputs.commitMessageFooter}`)
@@ -25,16 +25,22 @@ export const handleOtherEvent = async (inputs: Inputs, context: PartialContext) 
     if (context.eventName === 'push') {
       throw new Error(`GitHub Actions automatically updated the generated files in ${context.ref}`)
     }
-    return
+    return {}
   }
 
   core.info(`Falling back to create a pull request to follow up`)
-  const pullUrl = await createPull(inputs, context)
+  const pull = await createPull(inputs, context)
   core.summary.addHeading(`Created a pull request: ${inputs.title}`)
-  core.summary.addLink(pullUrl, pullUrl)
+  core.summary.addLink(pull.html_url, pull.html_url)
   await core.summary.write()
-  if (context.eventName === 'push') {
-    throw new Error(`Please merge ${pullUrl} to follow up the generated files`)
+
+  return {
+    error:
+      context.eventName === 'push'
+        ? new Error(`Please merge ${pull.html_url} to follow up the generated files`)
+        : undefined,
+    pullRequestUrl: pull.html_url,
+    pullRequestNumber: pull.number,
   }
 }
 
@@ -56,7 +62,12 @@ const updateRefByFastForward = async (inputs: Inputs, context: PartialContext): 
   return true
 }
 
-const createPull = async (inputs: Inputs, context: PartialContext): Promise<string> => {
+type PullRequest = {
+  html_url: string
+  number: number
+}
+
+const createPull = async (inputs: Inputs, context: PartialContext): Promise<PullRequest> => {
   const head = `update-generated-files-${context.sha}-${context.runNumber}`
   core.info(`Creating a new branch ${head}`)
   await git.push({ ref: `refs/heads/${head}`, token: inputs.token })
@@ -72,7 +83,6 @@ const createPull = async (inputs: Inputs, context: PartialContext): Promise<stri
     body: `${inputs.body}\n\n----\n\n${inputs.commitMessage}\n${inputs.commitMessageFooter}`,
   })
   core.info(`Created ${pull.html_url}`)
-  core.setOutput('pr-number', pull.number)
 
   if (inputs.reviewers) {
     const r = splitReviewers(inputs.reviewers)
@@ -124,7 +134,7 @@ const createPull = async (inputs: Inputs, context: PartialContext): Promise<stri
     (e) => core.info(`could not assign ${context.actor}: ${String(e)}`),
   )
 
-  return pull.html_url
+  return pull
 }
 
 const splitReviewers = (reviewers: string[]) => ({
