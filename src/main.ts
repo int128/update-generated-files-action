@@ -2,7 +2,7 @@ import * as core from '@actions/core'
 import { run } from './run'
 
 const main = async (): Promise<void> => {
-  await run({
+  const outputs = await run({
     commitMessage: core.getInput('commit-message', { required: true }),
     commitMessageFooter: core.getInput('commit-message-footer', { required: true }),
     title: core.getInput('title', { required: true }),
@@ -11,6 +11,15 @@ const main = async (): Promise<void> => {
     labels: core.getMultilineInput('labels'),
     token: core.getInput('token', { required: true }),
   })
+  if (outputs.pullRequestUrl) {
+    core.setOutput('pull-request-url', outputs.pullRequestUrl)
+  }
+  if (outputs.pullRequestNumber) {
+    core.setOutput('pull-request-number', outputs.pullRequestNumber)
+  }
+  if (outputs.error) {
+    throw outputs.error
+  }
 }
 
 main().catch((e: Error) => {
