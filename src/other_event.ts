@@ -95,7 +95,7 @@ const createPull = async (inputs: Inputs, context: PartialContext): Promise<Pull
           reviewers: r.users,
           team_reviewers: r.teams,
         }),
-      (e) => core.info(`could not request a review to ${context.actor}: ${String(e)}`),
+      (e) => core.info(`could not request a review to ${JSON.stringify(r)}: ${String(e)}`),
     )
   }
 
