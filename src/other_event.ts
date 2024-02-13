@@ -84,7 +84,7 @@ const createPull = async (inputs: Inputs, context: PartialContext): Promise<Pull
   })
   core.info(`Created ${pull.html_url}`)
 
-  if (inputs.reviewers) {
+  if (inputs.reviewers.length > 0) {
     const r = splitReviewers(inputs.reviewers)
     core.info(`Requesting a review to ${JSON.stringify(r)}`)
     await catchRequestError(
@@ -95,11 +95,11 @@ const createPull = async (inputs: Inputs, context: PartialContext): Promise<Pull
           reviewers: r.users,
           team_reviewers: r.teams,
         }),
-      (e) => core.info(`could not request a review to ${JSON.stringify(r)}: ${String(e)}`),
+      (e) => core.warning(`could not request a review to ${JSON.stringify(r)}: ${String(e)}`),
     )
   }
 
-  if (inputs.labels) {
+  if (inputs.labels.length > 0) {
     core.info(`Adding labels ${JSON.stringify(inputs.labels)}`)
     await catchRequestError(
       () =>
@@ -108,7 +108,7 @@ const createPull = async (inputs: Inputs, context: PartialContext): Promise<Pull
           issue_number: pull.number,
           labels: inputs.labels,
         }),
-      (e) => core.info(`could not add labels to ${pull.number}: ${String(e)}`),
+      (e) => core.warning(`could not add labels to ${pull.number}: ${String(e)}`),
     )
   }
 
