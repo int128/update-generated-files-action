@@ -15,8 +15,8 @@ dependencies:
     specifier: 6.0.0
     version: 6.0.0
   '@octokit/request-error':
-    specifier: 5.0.1
-    version: 5.0.1
+    specifier: 6.0.2
+    version: 6.0.2
 
 devDependencies:
   '@tsconfig/node20':
@@ -845,6 +845,13 @@ packages:
       '@octokit/types': 12.6.0
       deprecation: 2.3.1
       once: 1.4.0
+    dev: false
+
+  /@octokit/request-error@6.0.2:
+    resolution: {integrity: sha512-WtRVpoHcNXs84+s9s/wqfHaxM68NGMg8Av7h59B50OVO0PwwMx+2GgQ/OliUd0iQBSNWgR6N8afi/KjSHbXHWw==}
+    engines: {node: '>= 18'}
+    dependencies:
+      '@octokit/types': 12.6.0
     dev: false
 
   /@octokit/request@8.2.0:
