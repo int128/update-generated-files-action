@@ -3,7 +3,6 @@ import * as git from './git'
 import * as github from '@actions/github'
 import { Inputs, Outputs } from './run'
 import { Context } from '@actions/github/lib/context'
-import { RequestError } from '@octokit/request-error'
 
 const LIMIT_REPEATED_COMMITS = 5
 
@@ -146,9 +145,14 @@ const catchRequestError = async <T, U>(f: () => Promise<T>, g: (error: RequestEr
   try {
     return await f()
   } catch (error: unknown) {
-    if (error instanceof RequestError) {
+    if (isRequestError(error)) {
       return g(error)
     }
     throw error
   }
 }
+
+type RequestError = Error & { status: number }
+
+const isRequestError = (error: unknown): error is RequestError =>
+  error instanceof Error && 'status' in error && typeof error.status === 'number'
