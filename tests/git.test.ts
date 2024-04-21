@@ -1,4 +1,4 @@
-import { parseParentsOfGitCatFile } from '../src/git'
+import { parseParentsOfGitCatFile } from '../src/git.js'
 
 describe('parseParentsOfGitCatFile', () => {
   test('merge commit', () => {

@@ -1,8 +1,8 @@
 import * as core from '@actions/core'
-import * as git from './git'
+import * as git from './git.js'
 import * as github from '@actions/github'
-import { PullRequestContext, handlePullRequestEvent } from './pull_request_event'
-import { handleOtherEvent } from './other_event'
+import { PullRequestContext, handlePullRequestEvent } from './pull_request_event.js'
+import { handleOtherEvent } from './other_event.js'
 
 export type Inputs = {
   commitMessage: string

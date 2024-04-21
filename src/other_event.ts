@@ -1,12 +1,11 @@
 import * as core from '@actions/core'
-import * as git from './git'
+import * as git from './git.js'
 import * as github from '@actions/github'
-import { Inputs, Outputs } from './run'
-import { Context } from '@actions/github/lib/context'
+import { Inputs, Outputs } from './run.js'
 
 const LIMIT_REPEATED_COMMITS = 5
 
-export type PartialContext = Pick<Context, 'ref' | 'repo' | 'actor' | 'sha' | 'runNumber' | 'eventName'>
+export type PartialContext = Pick<typeof github.context, 'ref' | 'repo' | 'actor' | 'sha' | 'runNumber' | 'eventName'>
 
 export const handleOtherEvent = async (inputs: Inputs, context: PartialContext): Promise<Outputs> => {
   if (!context.ref.startsWith('refs/heads/')) {
