@@ -1,5 +1,5 @@
-import * as git from '../src/git'
-import { handleOtherEvent } from '../src/other_event'
+import * as git from '../src/git.js'
+import { handleOtherEvent } from '../src/other_event.js'
 
 const octokitMock = {
   rest: {

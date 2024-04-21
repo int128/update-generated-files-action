@@ -1,13 +1,12 @@
 import * as core from '@actions/core'
-import * as git from './git'
-import { Context } from '@actions/github/lib/context'
-import { WebhookPayload } from '@actions/github/lib/interfaces'
-import { Outputs } from './run'
+import * as git from './git.js'
+import * as github from '@actions/github'
+import { Outputs } from './run.js'
 
 const LIMIT_REPEATED_COMMITS = 5
 
-export type PullRequestContext = Pick<Context, 'sha'> & {
-  payload: Pick<WebhookPayload, 'action'> & {
+export type PullRequestContext = Pick<typeof github.context, 'sha'> & {
+  payload: Pick<typeof github.context.payload, 'action'> & {
     pull_request?: {
       base: {
         ref: string

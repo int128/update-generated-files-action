@@ -1,6 +1,6 @@
 import * as core from '@actions/core'
-import * as git from '../src/git'
-import { handlePullRequestEvent } from '../src/pull_request_event'
+import * as git from '../src/git.js'
+import { handlePullRequestEvent } from '../src/pull_request_event.js'
 
 jest.mock('@actions/core')
 jest.mocked(core.info).mockImplementation()
