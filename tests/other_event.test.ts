@@ -28,6 +28,7 @@ test('follow up by fast-forward', async () => {
       commitMessageFooter: 'https://github.com/int128/update-generated-files-action/actions/runs/4309709120',
       title: 'Follow up the generated files',
       body: 'This pull request will fix the generated files.',
+      draft: false,
       reviewers: ['myname', 'awesome/myteam'],
       labels: [],
       token: 'GITHUB_TOKEN',
@@ -83,6 +84,7 @@ test('fallback to pull-request', async () => {
       commitMessageFooter: 'https://github.com/int128/update-generated-files-action/actions/runs/4309709120',
       title: 'Follow up the generated files',
       body: 'This pull request will fix the generated files.',
+      draft: false,
       reviewers: ['myname', 'awesome/myteam'],
       labels: ['mylabel'],
       token: 'GITHUB_TOKEN',
@@ -127,6 +129,7 @@ https://github.com/int128/update-generated-files-action/actions/runs/4309709120`
     repo: 'update-generated-files-action',
     base: 'main',
     head: 'update-generated-files-0123456789abcdef-321',
+    draft: false,
     title: 'Follow up the generated files',
     body: `This pull request will fix the generated files.
 
