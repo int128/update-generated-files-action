@@ -97,17 +97,20 @@ jobs:
     steps:
       - uses: int128/update-generated-files-action@v2
         with:
-          # set a custom title or body to the pull request (optional)
+          # Set a custom title or body to the pull request (optional)
           title: Regenerate graphql code
           body: Updated by `yarn graphql-codegen`
-          # request reviewers for the pull request (optional)
+          # Request reviewers for the pull request (optional)
           reviewers: |
             username
             org/team
-          # add labels to the pull request (optional)
+          # Create a draft pull request (optional)
+          # This is useful to prevent CODEOWNERS from receiving a review request.
+          draft: true
+          # Add labels to the pull request (optional)
           labels: |
             updated-grapgql-codegen
-          # set a custom message to the new commit (optional)
+          # Set a custom message to the new commit (optional)
           commit-message: 'Fix: yarn graphql-codegen'
 ```
 
@@ -165,6 +168,7 @@ If the generated files are inconsistent, automerge will be stopped due to the fa
 | `commit-message-footer` | [action.yaml](action.yaml) | Footer of commit message                           |
 | `title`                 | [action.yaml](action.yaml) | Title of the pull request                          |
 | `body`                  | [action.yaml](action.yaml) | Body of the pull request                           |
+| `draft`                 | false                      | If true, create a draft pull request               |
 | `reviewers`             | (optional)                 | Request reviewers for the pull request (multiline) |
 | `labels`                | (optional)                 | Add labels to the pull request (multiline)         |
 | `token`                 | `github.token`             | GitHub token                                       |

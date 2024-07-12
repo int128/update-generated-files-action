@@ -79,6 +79,7 @@ const createPull = async (inputs: Inputs, context: PartialContext): Promise<Pull
     head,
     title: inputs.title,
     body: `${inputs.body}\n\n----\n\n${inputs.commitMessage}\n${inputs.commitMessageFooter}`,
+    draft: inputs.draft,
   })
   core.info(`Created ${pull.html_url}`)
 

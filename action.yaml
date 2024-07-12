@@ -20,6 +20,10 @@ inputs:
     default: |
       Hi @${{ github.actor }},
       Please merge this to fix the branch ${{ github.ref_name }} (commit ${{ github.sha }}).
+  draft:
+    description: If true, create a draft pull request
+    required: false
+    default: 'false'
   reviewers:
     description: reviewers of pull request (multiline)
     required: false

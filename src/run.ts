@@ -9,6 +9,7 @@ export type Inputs = {
   commitMessageFooter: string
   title: string
   body: string
+  draft: boolean
   reviewers: string[]
   labels: string[]
   token: string
