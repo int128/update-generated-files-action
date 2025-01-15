@@ -83,6 +83,9 @@ If this action could not push it due to the branch rule, it creates a new pull r
 
 <img width="920" alt="image" src="https://user-images.githubusercontent.com/321266/232307473-9180533d-898a-4192-a856-3cc695552162.png">
 
+This action requests a review to the current actor by default.
+If `reviewers` input is set, it requests a review to the specified users or teams.
+
 You can customize the pull request as follows:
 
 ```yaml
