@@ -145,18 +145,6 @@ https://github.com/int128/update-generated-files-action/actions/runs/4309709120`
     reviewers: ['myname'],
     team_reviewers: ['myteam'],
   })
-  expect(octokitMock.rest.pulls.requestReviewers).toHaveBeenCalledWith({
-    owner: 'int128',
-    pull_number: 987,
-    repo: 'update-generated-files-action',
-    reviewers: ['octocat'],
-  })
-  expect(octokitMock.rest.issues.addAssignees).toHaveBeenCalledWith({
-    assignees: ['octocat'],
-    issue_number: 987,
-    owner: 'int128',
-    repo: 'update-generated-files-action',
-  })
   expect(octokitMock.rest.issues.addLabels).toHaveBeenCalledWith({
     labels: ['mylabel'],
     issue_number: 987,
