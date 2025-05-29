@@ -10,6 +10,10 @@ inputs:
     description: footer of commit message
     required: true
     default: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+  head-branch:
+    description: (For internal) Head branch of a pull request to create. Non-alphanumeric characters will be escaped.
+    required: true
+    default: update-generated-files--${{ github.workflow }}--${{ github.run_number }}--${{ github.job }}--${{ strategy.job-index }}
   title:
     description: title of pull request
     required: true
