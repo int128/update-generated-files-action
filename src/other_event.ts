@@ -66,7 +66,7 @@ type PullRequest = {
 }
 
 const createPull = async (inputs: Inputs, context: PartialContext): Promise<PullRequest> => {
-  const head = `update-generated-files-${context.sha}-${context.runNumber}`
+  const head = inputs.headBranch.replaceAll(/[^\w]/g, '-')
   core.info(`Creating a new branch ${head}`)
   await git.push({ ref: `refs/heads/${head}`, token: inputs.token })
 

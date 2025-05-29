@@ -7,6 +7,7 @@ import { handleOtherEvent } from './other_event.js'
 export type Inputs = {
   commitMessage: string
   commitMessageFooter: string
+  headBranch: string
   title: string
   body: string
   draft: boolean

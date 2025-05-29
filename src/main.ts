@@ -5,6 +5,7 @@ const main = async (): Promise<void> => {
   const outputs = await run({
     commitMessage: core.getInput('commit-message', { required: true }),
     commitMessageFooter: core.getInput('commit-message-footer', { required: true }),
+    headBranch: core.getInput('head-branch', { required: true }),
     title: core.getInput('title', { required: true }),
     body: core.getInput('body', { required: true }),
     draft: core.getBooleanInput('draft', { required: true }),
