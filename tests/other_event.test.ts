@@ -1,26 +1,27 @@
 import * as git from '../src/git.js'
 import { handleOtherEvent } from '../src/other_event.js'
+import { vi, test, expect } from 'vitest'
 
 const octokitMock = {
   rest: {
     pulls: {
-      create: jest.fn(),
-      requestReviewers: jest.fn(),
+      create: vi.fn(),
+      requestReviewers: vi.fn(),
     },
     issues: {
-      addAssignees: jest.fn(),
-      addLabels: jest.fn(),
+      addAssignees: vi.fn(),
+      addLabels: vi.fn(),
     },
   },
 }
 
-jest.mock('@actions/core')
-jest.mock('@actions/github', () => ({ getOctokit: () => octokitMock }))
-jest.mock('../src/git')
+vi.mock('@actions/core')
+vi.mock('@actions/github', () => ({ getOctokit: () => octokitMock }))
+vi.mock('../src/git')
 
 test('follow up by fast-forward', async () => {
-  jest.mocked(git.getAuthorNameOfCommits).mockResolvedValueOnce(['octocat'])
-  jest.mocked(git.push).mockResolvedValueOnce(0)
+  vi.mocked(git.getAuthorNameOfCommits).mockResolvedValueOnce(['octocat'])
+  vi.mocked(git.push).mockResolvedValueOnce(0)
 
   const outputs = await handleOtherEvent(
     {
@@ -63,9 +64,9 @@ https://github.com/int128/update-generated-files-action/actions/runs/4309709120`
 })
 
 test('fallback to pull-request', async () => {
-  jest.mocked(git.getAuthorNameOfCommits).mockResolvedValueOnce(['octocat'])
-  jest.mocked(git.push).mockResolvedValueOnce(1)
-  jest.mocked(git.push).mockResolvedValueOnce(0)
+  vi.mocked(git.getAuthorNameOfCommits).mockResolvedValueOnce(['octocat'])
+  vi.mocked(git.push).mockResolvedValueOnce(1)
+  vi.mocked(git.push).mockResolvedValueOnce(0)
 
   octokitMock.rest.pulls.create.mockResolvedValueOnce({
     data: {

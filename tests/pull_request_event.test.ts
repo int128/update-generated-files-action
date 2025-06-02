@@ -1,10 +1,11 @@
 import * as core from '@actions/core'
 import * as git from '../src/git.js'
 import { handlePullRequestEvent } from '../src/pull_request_event.js'
+import { vi, test, expect, describe } from 'vitest'
 
-jest.mock('@actions/core')
-jest.mocked(core.info).mockImplementation()
-jest.mock('../src/git')
+vi.mock('@actions/core')
+vi.mocked(core.info).mockImplementation(() => {})
+vi.mock('../src/git')
 
 describe('pull request event', () => {
   const inputs = {
@@ -29,11 +30,11 @@ describe('pull request event', () => {
   }
 
   test('checkout with merge commit', async () => {
-    jest.mocked(git.getAuthorNameOfCommits).mockResolvedValue(['renovate[bot]'])
-    jest.mocked(git.getCurrentSHA).mockResolvedValue('0123456789abcdef-merge')
-    jest.mocked(git.canMerge).mockResolvedValueOnce(false)
-    jest.mocked(git.canMerge).mockResolvedValueOnce(true)
-    jest.mocked(git.getParentSHAs).mockResolvedValueOnce(['0123456789abcdef-latest-base', '0123456789abcdef-head'])
+    vi.mocked(git.getAuthorNameOfCommits).mockResolvedValue(['renovate[bot]'])
+    vi.mocked(git.getCurrentSHA).mockResolvedValue('0123456789abcdef-merge')
+    vi.mocked(git.canMerge).mockResolvedValueOnce(false)
+    vi.mocked(git.canMerge).mockResolvedValueOnce(true)
+    vi.mocked(git.getParentSHAs).mockResolvedValueOnce(['0123456789abcdef-latest-base', '0123456789abcdef-head'])
 
     await handlePullRequestEvent(inputs, context)
 
@@ -54,8 +55,8 @@ https://github.com/int128/update-generated-files-action/actions/runs/4309709120`
   })
 
   test('checkout with head commit', async () => {
-    jest.mocked(git.getAuthorNameOfCommits).mockResolvedValue(['renovate[bot]'])
-    jest.mocked(git.getCurrentSHA).mockResolvedValue('0123456789abcdef-head')
+    vi.mocked(git.getAuthorNameOfCommits).mockResolvedValue(['renovate[bot]'])
+    vi.mocked(git.getCurrentSHA).mockResolvedValue('0123456789abcdef-head')
     await handlePullRequestEvent(inputs, context)
 
     expect(git.checkout).not.toHaveBeenCalled()
@@ -67,9 +68,13 @@ https://github.com/int128/update-generated-files-action/actions/runs/4309709120`
   })
 
   test('last authors are this action', async () => {
-    jest
-      .mocked(git.getAuthorNameOfCommits)
-      .mockResolvedValue([git.AUTHOR_NAME, git.AUTHOR_NAME, git.AUTHOR_NAME, git.AUTHOR_NAME, git.AUTHOR_NAME])
+    vi.mocked(git.getAuthorNameOfCommits).mockResolvedValue([
+      git.AUTHOR_NAME,
+      git.AUTHOR_NAME,
+      git.AUTHOR_NAME,
+      git.AUTHOR_NAME,
+      git.AUTHOR_NAME,
+    ])
     await expect(handlePullRequestEvent(inputs, context)).rejects.toThrow(/infinite loop/)
   })
 })

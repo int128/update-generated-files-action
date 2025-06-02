@@ -1,4 +1,5 @@
 import { parseParentsOfGitCatFile } from '../src/git.js'
+import { describe, expect, test } from 'vitest'
 
 describe('parseParentsOfGitCatFile', () => {
   test('merge commit', () => {
