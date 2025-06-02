@@ -1,7 +1,8 @@
 import * as core from '@actions/core'
 import * as git from './git.js'
-import * as github from '@actions/github'
-import { PullRequestContext, handlePullRequestEvent } from './pull_request_event.js'
+import { Context, contextIsPullRequestEvent } from './github.js'
+import { Octokit } from '@octokit/action'
+import { handlePullRequestEvent } from './pull_request_event.js'
 import { handleOtherEvent } from './other_event.js'
 
 export type Inputs = {
@@ -24,7 +25,7 @@ export type Outputs = {
   pullRequestNumber?: number
 }
 
-export const run = async (inputs: Inputs): Promise<Outputs> => {
+export const run = async (inputs: Inputs, context: Context, octokit: Octokit): Promise<Outputs> => {
   if ((await git.status()) === '') {
     core.info('Nothing to commit')
     return {}
@@ -32,8 +33,9 @@ export const run = async (inputs: Inputs): Promise<Outputs> => {
 
   await git.configureAuthor()
 
-  if (github.context.eventName === 'pull_request') {
-    return await handlePullRequestEvent(inputs, github.context as PullRequestContext)
+  if (contextIsPullRequestEvent(context)) {
+    return await handlePullRequestEvent(inputs, context)
   }
-  return await handleOtherEvent(inputs, github.context)
+
+  return await handleOtherEvent(inputs, context, octokit)
 }

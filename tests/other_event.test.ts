@@ -1,5 +1,7 @@
 import * as git from '../src/git.js'
+import { Octokit } from '@octokit/action'
 import { handleOtherEvent } from '../src/other_event.js'
+import { WebhookEvent } from '@octokit/webhooks-types'
 import { vi, test, expect } from 'vitest'
 
 const octokitMock = {
@@ -16,7 +18,6 @@ const octokitMock = {
 }
 
 vi.mock('@actions/core')
-vi.mock('@actions/github', () => ({ getOctokit: () => octokitMock }))
 vi.mock('../src/git')
 
 test('follow up by fast-forward', async () => {
@@ -37,7 +38,6 @@ test('follow up by fast-forward', async () => {
     },
     {
       ref: 'refs/heads/main',
-      runNumber: 321,
       actor: 'octocat',
       eventName: 'dummy',
       sha: '0123456789abcdef',
@@ -45,7 +45,9 @@ test('follow up by fast-forward', async () => {
         owner: 'int128',
         repo: 'update-generated-files-action',
       },
+      payload: {} as WebhookEvent,
     },
+    octokitMock as unknown as Octokit,
   )
 
   expect(outputs).toStrictEqual({})
@@ -94,7 +96,6 @@ test('fallback to pull-request', async () => {
     },
     {
       ref: 'refs/heads/main',
-      runNumber: 321,
       actor: 'octocat',
       eventName: 'dummy',
       sha: '0123456789abcdef',
@@ -102,7 +103,9 @@ test('fallback to pull-request', async () => {
         owner: 'int128',
         repo: 'update-generated-files-action',
       },
+      payload: {} as WebhookEvent,
     },
+    octokitMock as unknown as Octokit,
   )
 
   expect(outputs).toStrictEqual({

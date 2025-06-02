@@ -1,23 +1,10 @@
 import * as core from '@actions/core'
 import * as git from './git.js'
-import * as github from '@actions/github'
+import { Context } from './github.js'
 import { Outputs } from './run.js'
+import { PullRequestEvent } from '@octokit/webhooks-types'
 
 const LIMIT_REPEATED_COMMITS = 5
-
-export type PullRequestContext = Pick<typeof github.context, 'sha'> & {
-  payload: Pick<typeof github.context.payload, 'action'> & {
-    pull_request?: {
-      base: {
-        ref: string
-      }
-      head: {
-        sha: string
-        ref: string
-      }
-    }
-  }
-}
 
 type Inputs = {
   commitMessage: string
@@ -25,11 +12,7 @@ type Inputs = {
   token: string
 }
 
-export const handlePullRequestEvent = async (inputs: Inputs, context: PullRequestContext): Promise<Outputs> => {
-  if (context.payload.pull_request === undefined) {
-    throw new Error(`context.payload.pull_request is undefined`)
-  }
-
+export const handlePullRequestEvent = async (inputs: Inputs, context: Context<PullRequestEvent>): Promise<Outputs> => {
   const headSHA = context.payload.pull_request.head.sha
   await git.fetch({ refs: [headSHA], depth: LIMIT_REPEATED_COMMITS, token: inputs.token })
   const lastAuthorNames = await git.getAuthorNameOfCommits(headSHA, LIMIT_REPEATED_COMMITS)
@@ -67,11 +50,7 @@ export const handlePullRequestEvent = async (inputs: Inputs, context: PullReques
   return {}
 }
 
-const recreateMergeCommit = async (currentSHA: string, inputs: Inputs, context: PullRequestContext) => {
-  if (context.payload.pull_request === undefined) {
-    throw new Error(`context.payload.pull_request is undefined`)
-  }
-
+const recreateMergeCommit = async (currentSHA: string, inputs: Inputs, context: Context<PullRequestEvent>) => {
   const parentSHAs = await git.getParentSHAs(currentSHA)
   const headSHA = context.payload.pull_request.head.sha
   const baseSHA = parentSHAs.filter((sha) => sha != headSHA).pop()
