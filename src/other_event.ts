@@ -1,13 +1,12 @@
 import * as core from '@actions/core'
 import * as git from './git.js'
-import * as github from '@actions/github'
+import { Context } from './github.js'
+import { Octokit } from '@octokit/action'
 import { Inputs, Outputs } from './run.js'
 
 const LIMIT_REPEATED_COMMITS = 5
 
-export type PartialContext = Pick<typeof github.context, 'ref' | 'repo' | 'actor' | 'sha' | 'runNumber' | 'eventName'>
-
-export const handleOtherEvent = async (inputs: Inputs, context: PartialContext): Promise<Outputs> => {
+export const handleOtherEvent = async (inputs: Inputs, context: Context, octokit: Octokit): Promise<Outputs> => {
   if (!context.ref.startsWith('refs/heads/')) {
     core.warning('This action handles only branch event')
     return {}
@@ -27,7 +26,7 @@ export const handleOtherEvent = async (inputs: Inputs, context: PartialContext):
   }
 
   core.info(`Falling back to create a pull request to follow up`)
-  const pull = await createPull(inputs, context)
+  const pull = await createPull(inputs, context, octokit)
   core.summary.addHeading(`Created a pull request: ${inputs.title}`)
   core.summary.addLink(pull.html_url, pull.html_url)
   await core.summary.write()
@@ -42,7 +41,7 @@ export const handleOtherEvent = async (inputs: Inputs, context: PartialContext):
   }
 }
 
-const updateRefByFastForward = async (inputs: Inputs, context: PartialContext): Promise<boolean> => {
+const updateRefByFastForward = async (inputs: Inputs, context: Context): Promise<boolean> => {
   core.info(`Checking the last commits to prevent infinite loop`)
   await git.fetch({ refs: [context.sha], depth: LIMIT_REPEATED_COMMITS, token: inputs.token })
   const lastAuthorNames = await git.getAuthorNameOfCommits(context.sha, LIMIT_REPEATED_COMMITS)
@@ -65,12 +64,11 @@ type PullRequest = {
   number: number
 }
 
-const createPull = async (inputs: Inputs, context: PartialContext): Promise<PullRequest> => {
+const createPull = async (inputs: Inputs, context: Context, octokit: Octokit): Promise<PullRequest> => {
   const head = inputs.headBranch.replaceAll(/[^\w]/g, '-')
   core.info(`Creating a new branch ${head}`)
   await git.push({ ref: `refs/heads/${head}`, token: inputs.token })
 
-  const octokit = github.getOctokit(inputs.token)
   const base = context.ref.replace(/^refs\/heads\//, '')
   core.info(`Creating a pull request for ${base} branch`)
   const { data: pull } = await octokit.rest.pulls.create({
