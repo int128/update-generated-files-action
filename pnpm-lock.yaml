@@ -31,7 +31,7 @@ importers:
         specifier: 0.38.3
         version: 0.38.3
       '@vitest/eslint-plugin':
-        specifier: ^1.2.1
+        specifier: 1.2.1
         version: 1.2.1(eslint@9.28.0)(typescript@5.8.3)(vitest@3.1.4(@types/node@20.17.57))
       eslint:
         specifier: 9.28.0
@@ -52,7 +52,7 @@ importers:
         specifier: 8.33.0
         version: 8.33.0(eslint@9.28.0)(typescript@5.8.3)
       vitest:
-        specifier: ^3.1.4
+        specifier: 3.1.4
         version: 3.1.4(@types/node@20.17.57)
 
 packages:
@@ -1790,7 +1790,7 @@ snapshots:
 
   estree-walker@3.0.3:
     dependencies:
-      '@types/estree': 1.0.6
+      '@types/estree': 1.0.7
 
   esutils@2.0.3: {}
 
