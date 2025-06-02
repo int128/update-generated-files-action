@@ -1,6 +1,8 @@
 import * as core from '@actions/core'
 import * as git from '../src/git.js'
 import { handlePullRequestEvent } from '../src/pull_request_event.js'
+import { Context } from '../src/github.js'
+import { PullRequestEvent } from '@octokit/webhooks-types'
 import { vi, test, expect, describe } from 'vitest'
 
 vi.mock('@actions/core')
@@ -36,7 +38,7 @@ describe('pull request event', () => {
     vi.mocked(git.canMerge).mockResolvedValueOnce(true)
     vi.mocked(git.getParentSHAs).mockResolvedValueOnce(['0123456789abcdef-latest-base', '0123456789abcdef-head'])
 
-    await handlePullRequestEvent(inputs, context)
+    await handlePullRequestEvent(inputs, context as Context<PullRequestEvent>)
 
     expect(git.stash).toHaveBeenCalledTimes(1)
     expect(git.checkout).toHaveBeenCalledWith('0123456789abcdef-head')
@@ -57,7 +59,7 @@ https://github.com/int128/update-generated-files-action/actions/runs/4309709120`
   test('checkout with head commit', async () => {
     vi.mocked(git.getAuthorNameOfCommits).mockResolvedValue(['renovate[bot]'])
     vi.mocked(git.getCurrentSHA).mockResolvedValue('0123456789abcdef-head')
-    await handlePullRequestEvent(inputs, context)
+    await handlePullRequestEvent(inputs, context as Context<PullRequestEvent>)
 
     expect(git.checkout).not.toHaveBeenCalled()
     expect(git.merge).not.toHaveBeenCalled()
@@ -75,6 +77,6 @@ https://github.com/int128/update-generated-files-action/actions/runs/4309709120`
       git.AUTHOR_NAME,
       git.AUTHOR_NAME,
     ])
-    await expect(handlePullRequestEvent(inputs, context)).rejects.toThrow(/infinite loop/)
+    await expect(handlePullRequestEvent(inputs, context as Context<PullRequestEvent>)).rejects.toThrow(/infinite loop/)
   })
 })
