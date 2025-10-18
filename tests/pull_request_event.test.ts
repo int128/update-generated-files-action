@@ -1,9 +1,9 @@
 import * as core from '@actions/core'
+import type { PullRequestEvent } from '@octokit/webhooks-types'
+import { describe, expect, test, vi } from 'vitest'
 import * as git from '../src/git.js'
+import type { Context } from '../src/github.js'
 import { handlePullRequestEvent } from '../src/pull_request_event.js'
-import { Context } from '../src/github.js'
-import { PullRequestEvent } from '@octokit/webhooks-types'
-import { vi, test, expect, describe } from 'vitest'
 
 vi.mock('@actions/core')
 vi.mocked(core.info).mockImplementation(() => {})

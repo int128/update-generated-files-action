@@ -1,9 +1,9 @@
 import * as core from '@actions/core'
+import type { Octokit } from '@octokit/action'
 import * as git from './git.js'
-import { Context, contextIsPullRequestEvent } from './github.js'
-import { Octokit } from '@octokit/action'
-import { handlePullRequestEvent } from './pull_request_event.js'
+import { type Context, contextIsPullRequestEvent } from './github.js'
 import { handleOtherEvent } from './other_event.js'
+import { handlePullRequestEvent } from './pull_request_event.js'
 
 export type Inputs = {
   commitMessage: string

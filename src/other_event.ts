@@ -1,8 +1,8 @@
 import * as core from '@actions/core'
+import type { Octokit } from '@octokit/action'
 import * as git from './git.js'
-import { Context } from './github.js'
-import { Octokit } from '@octokit/action'
-import { Inputs, Outputs } from './run.js'
+import type { Context } from './github.js'
+import type { Inputs, Outputs } from './run.js'
 
 const LIMIT_REPEATED_COMMITS = 5
 
@@ -45,7 +45,7 @@ const updateRefByFastForward = async (inputs: Inputs, context: Context): Promise
   core.info(`Checking the last commits to prevent infinite loop`)
   await git.fetch({ refs: [context.sha], depth: LIMIT_REPEATED_COMMITS, token: inputs.token })
   const lastAuthorNames = await git.getAuthorNameOfCommits(context.sha, LIMIT_REPEATED_COMMITS)
-  if (lastAuthorNames.every((authorName) => authorName == git.AUTHOR_NAME)) {
+  if (lastAuthorNames.every((authorName) => authorName === git.AUTHOR_NAME)) {
     core.error(`This action has been called ${lastAuthorNames.length} times. Do not push to prevent infinite loop`)
     return false
   }
