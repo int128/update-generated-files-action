@@ -1,8 +1,8 @@
 import * as core from '@actions/core'
+import type { PullRequestEvent } from '@octokit/webhooks-types'
 import * as git from './git.js'
-import { Context } from './github.js'
-import { Outputs } from './run.js'
-import { PullRequestEvent } from '@octokit/webhooks-types'
+import type { Context } from './github.js'
+import type { Outputs } from './run.js'
 
 const LIMIT_REPEATED_COMMITS = 5
 
@@ -16,7 +16,7 @@ export const handlePullRequestEvent = async (inputs: Inputs, context: Context<Pu
   const headSHA = context.payload.pull_request.head.sha
   await git.fetch({ refs: [headSHA], depth: LIMIT_REPEATED_COMMITS, token: inputs.token })
   const lastAuthorNames = await git.getAuthorNameOfCommits(headSHA, LIMIT_REPEATED_COMMITS)
-  if (lastAuthorNames.every((authorName) => authorName == git.AUTHOR_NAME)) {
+  if (lastAuthorNames.every((authorName) => authorName === git.AUTHOR_NAME)) {
     throw new Error(
       `This action has been called ${LIMIT_REPEATED_COMMITS} times. Stop the job to prevent infinite loop.`,
     )
@@ -53,7 +53,7 @@ export const handlePullRequestEvent = async (inputs: Inputs, context: Context<Pu
 const recreateMergeCommit = async (currentSHA: string, inputs: Inputs, context: Context<PullRequestEvent>) => {
   const parentSHAs = await git.getParentSHAs(currentSHA)
   const headSHA = context.payload.pull_request.head.sha
-  const baseSHA = parentSHAs.filter((sha) => sha != headSHA).pop()
+  const baseSHA = parentSHAs.filter((sha) => sha !== headSHA).pop()
   if (baseSHA === undefined) {
     core.warning(`Could not determine base commit from parents ${String(parentSHAs)}`)
     return

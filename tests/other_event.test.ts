@@ -1,8 +1,8 @@
+import type { Octokit } from '@octokit/action'
+import type { WebhookEvent } from '@octokit/webhooks-types'
+import { expect, test, vi } from 'vitest'
 import * as git from '../src/git.js'
-import { Octokit } from '@octokit/action'
 import { handleOtherEvent } from '../src/other_event.js'
-import { WebhookEvent } from '@octokit/webhooks-types'
-import { vi, test, expect } from 'vitest'
 
 const octokitMock = {
   rest: {

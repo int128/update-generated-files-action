@@ -1,8 +1,8 @@
-import assert from 'assert'
-import * as fs from 'fs/promises'
+import assert from 'node:assert'
+import * as fs from 'node:fs/promises'
 import { Octokit } from '@octokit/action'
 import { retry } from '@octokit/plugin-retry'
-import { PullRequestEvent, WebhookEvent } from '@octokit/webhooks-types'
+import type { PullRequestEvent, WebhookEvent } from '@octokit/webhooks-types'
 
 export const getOctokit = () => new (Octokit.plugin(retry))()
 
