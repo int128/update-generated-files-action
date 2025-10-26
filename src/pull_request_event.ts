@@ -27,6 +27,7 @@ export const handlePullRequestEvent = async (inputs: Inputs, context: Context<Pu
   if (checkoutSHA === context.sha) {
     await updateHeadBasedOnMergeCommit(inputs, context)
   } else {
+    core.info(`Committing the workspace changes on the head branch directly`)
     await git.commit(`${inputs.commitMessage}\n\n${inputs.commitMessageFooter}`)
     const headRef = context.payload.pull_request.head.ref
     core.info(`Updating the head branch ${headRef}`)
@@ -44,6 +45,7 @@ export const handlePullRequestEvent = async (inputs: Inputs, context: Context<Pu
 }
 
 const updateHeadBasedOnMergeCommit = async (inputs: Inputs, context: Context<PullRequestEvent>) => {
+  core.info(`Committing the workspace changes on the merge commit`)
   await git.commit(`${inputs.commitMessage}\n\n${inputs.commitMessageFooter}`)
   const workspaceChangeSHA = await git.getCurrentSHA()
 
