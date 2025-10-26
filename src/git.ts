@@ -40,7 +40,7 @@ export const parseParentsOfGitCatFile = (stdout: string): string[] => {
 export const showGraph = async () =>
   await exec.exec('git', ['log', '--max-count=10', '--graph', '--decorate', '--pretty=oneline', '--color=always'])
 
-export const checkout = async (sha: string) => await exec.exec('git', ['checkout', sha])
+export const checkout = async (sha: string) => await exec.exec('git', ['checkout', '--detach', sha])
 
 export const merge = async (sha: string, message: string) =>
   await exec.exec('git', ['merge', '--no-ff', '-m', message, sha])
@@ -48,8 +48,14 @@ export const merge = async (sha: string, message: string) =>
 export const canMerge = async (base: string, head: string): Promise<boolean> =>
   (await exec.exec('git', ['merge-base', base, head], { ignoreReturnCode: true })) === 0
 
-export const tryCherryPick = async (sha: string): Promise<boolean> =>
-  (await exec.exec('git', ['cherry-pick', sha], { ignoreReturnCode: true })) === 0
+export const tryCherryPick = async (sha: string): Promise<boolean> => {
+  const code = await exec.exec('git', ['cherry-pick', sha], { ignoreReturnCode: true })
+  if (code === 0) {
+    return true
+  }
+  await exec.exec('git', ['cherry-pick', '--abort'])
+  return false
+}
 
 export const commit = async (message: string) => {
   await exec.exec('git', ['add', '.'])
