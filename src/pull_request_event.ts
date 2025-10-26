@@ -48,8 +48,6 @@ export const handlePullRequestEvent = async (inputs: Inputs, context: Context<Pu
       return {}
     }
 
-
-
     core.info(`Re-merging base branch into head branch`)
     await git.checkout(headSHA)
     await recreateMergeCommit(checkoutSHA, inputs, context)
