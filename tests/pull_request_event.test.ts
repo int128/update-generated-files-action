@@ -69,6 +69,8 @@ https://github.com/int128/update-generated-files-action/actions/runs/4309709120`
     expect(git.push).toHaveBeenCalledTimes(1)
   })
 
+
+
   test('last authors are this action', async () => {
     vi.mocked(git.getAuthorNameOfCommits).mockResolvedValue([
       git.AUTHOR_NAME,
