@@ -41,8 +41,6 @@ export const handlePullRequestEvent = async (inputs: Inputs, context: Context<Pu
   return {}
 }
 
-
-
 const updateHeadRefBasedOnMergeCommit = async (inputs: Inputs, context: Context<PullRequestEvent>) => {
   const headSHA = context.payload.pull_request.head.sha
   const headRef = context.payload.pull_request.head.ref
