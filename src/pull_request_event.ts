@@ -44,10 +44,8 @@ export const handlePullRequestEvent = async (inputs: Inputs, context: Context<Pu
   return {}
 }
 
-const currentCommitIsMergeCommit = async (context: Context<PullRequestEvent>): Promise<boolean> => {
-  const currentSHA = await git.getCurrentSHA()
-  return currentSHA === context.sha
-}
+const currentCommitIsMergeCommit = async (context: Context<PullRequestEvent>): Promise<boolean> =>
+  (await git.getCurrentSHA()) === context.sha
 
 const cherryPickWorkspaceChangesOntoMergeCommit = async (inputs: Inputs, context: Context<PullRequestEvent>) => {
   core.info(`Cherry-pick the workspace changes onto the merge commit`)
