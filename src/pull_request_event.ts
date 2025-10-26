@@ -23,17 +23,17 @@ export const handlePullRequestEvent = async (inputs: Inputs, context: Context<Pu
     )
   }
 
-  const checkoutSHA = await git.getCurrentSHA()
-  if (checkoutSHA === context.sha) {
-    await updateHeadBasedOnMergeCommit(inputs, context)
+  if (await currentCommitIsMergeCommit(context)) {
+    await cherryPickWorkspaceChangesOntoMergeCommit(inputs, context)
   } else {
     core.info(`Committing the workspace changes on the head branch directly`)
     await git.commit(`${inputs.commitMessage}\n\n${inputs.commitMessageFooter}`)
-    const headRef = context.payload.pull_request.head.ref
-    core.info(`Updating the head branch ${headRef}`)
-    await git.showGraph()
-    await git.push({ ref: `refs/heads/${headRef}`, token: inputs.token })
   }
+
+  const headRef = context.payload.pull_request.head.ref
+  core.info(`Updating the head branch ${headRef}`)
+  await git.showGraph()
+  await git.push({ ref: `refs/heads/${headRef}`, token: inputs.token })
 
   if (context.payload.action === 'opened' || context.payload.action === 'synchronize') {
     // Fail if the head ref is outdated
@@ -44,8 +44,13 @@ export const handlePullRequestEvent = async (inputs: Inputs, context: Context<Pu
   return {}
 }
 
-const updateHeadBasedOnMergeCommit = async (inputs: Inputs, context: Context<PullRequestEvent>) => {
-  core.info(`Committing the workspace changes on the merge commit`)
+const currentCommitIsMergeCommit = async (context: Context<PullRequestEvent>): Promise<boolean> => {
+  const currentSHA = await git.getCurrentSHA()
+  return currentSHA === context.sha
+}
+
+const cherryPickWorkspaceChangesOntoMergeCommit = async (inputs: Inputs, context: Context<PullRequestEvent>) => {
+  core.info(`Cherry-pick the workspace changes onto the merge commit`)
   await git.commit(`${inputs.commitMessage}\n\n${inputs.commitMessageFooter}`)
   const workspaceChangeSHA = await git.getCurrentSHA()
 
@@ -57,10 +62,6 @@ const updateHeadBasedOnMergeCommit = async (inputs: Inputs, context: Context<Pul
 
   await git.checkout(headSHA)
   if (await git.tryCherryPick(workspaceChangeSHA)) {
-    const headRef = context.payload.pull_request.head.ref
-    core.info(`Updating the head branch ${headRef}`)
-    await git.showGraph()
-    await git.push({ ref: `refs/heads/${headRef}`, token: inputs.token })
     return
   }
 
@@ -80,9 +81,6 @@ Updated the head branch since the current workflow is running on the merge commi
 ${inputs.commitMessageFooter}`,
   )
   await git.cherryPick(workspaceChangeSHA)
-  core.info(`Updating the head branch ${headRef}`)
-  await git.showGraph()
-  await git.push({ ref: `refs/heads/${headRef}`, token: inputs.token })
 }
 
 const fetchCommitsBetweenBaseHead = async (baseSHA: string, headSHA: string, token: string) => {
