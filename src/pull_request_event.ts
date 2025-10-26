@@ -13,8 +13,10 @@ type Inputs = {
 }
 
 export const handlePullRequestEvent = async (inputs: Inputs, context: Context<PullRequestEvent>): Promise<Outputs> => {
+  const checkoutSHA = await git.getCurrentSHA()
   const headSHA = context.payload.pull_request.head.sha
   const headRef = context.payload.pull_request.head.ref
+
   await git.fetch({ refs: [headSHA], depth: LIMIT_REPEATED_COMMITS, token: inputs.token })
   const lastAuthorNames = await git.getAuthorNameOfCommits(headSHA, LIMIT_REPEATED_COMMITS)
   if (lastAuthorNames.every((authorName) => authorName === git.AUTHOR_NAME)) {
@@ -22,10 +24,10 @@ export const handlePullRequestEvent = async (inputs: Inputs, context: Context<Pu
       `This action has been called ${LIMIT_REPEATED_COMMITS} times. Stop the job to prevent infinite loop.`,
     )
   }
+
   await git.commit(`${inputs.commitMessage}\n\n${inputs.commitMessageFooter}`)
   const workspaceChangeSHA = await git.getCurrentSHA()
 
-  const checkoutSHA = await git.getCurrentSHA()
   if (checkoutSHA === context.sha) {
     // If this action pushes the merge commit (refs/pull/x/merge) into the head branch,
     // we may see the unrelated diff in the pull request diff.
@@ -47,7 +49,7 @@ export const handlePullRequestEvent = async (inputs: Inputs, context: Context<Pu
     }
 
 
-    
+
     core.info(`Re-merging base branch into head branch`)
     await git.checkout(headSHA)
     await recreateMergeCommit(checkoutSHA, inputs, context)
