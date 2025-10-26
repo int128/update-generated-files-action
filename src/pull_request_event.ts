@@ -14,6 +14,7 @@ type Inputs = {
 
 export const handlePullRequestEvent = async (inputs: Inputs, context: Context<PullRequestEvent>): Promise<Outputs> => {
   const headSHA = context.payload.pull_request.head.sha
+  const headRef = context.payload.pull_request.head.ref
   await git.fetch({ refs: [headSHA], depth: LIMIT_REPEATED_COMMITS, token: inputs.token })
   const lastAuthorNames = await git.getAuthorNameOfCommits(headSHA, LIMIT_REPEATED_COMMITS)
   if (lastAuthorNames.every((authorName) => authorName === git.AUTHOR_NAME)) {
@@ -21,30 +22,55 @@ export const handlePullRequestEvent = async (inputs: Inputs, context: Context<Pu
       `This action has been called ${LIMIT_REPEATED_COMMITS} times. Stop the job to prevent infinite loop.`,
     )
   }
+  await git.commit(`${inputs.commitMessage}\n\n${inputs.commitMessageFooter}`)
+  const workspaceChangeSHA = await git.getCurrentSHA()
 
-  const currentSHA = await git.getCurrentSHA()
-  if (currentSHA === context.sha) {
+  const checkoutSHA = await git.getCurrentSHA()
+  if (checkoutSHA === context.sha) {
     // If this action pushes the merge commit (refs/pull/x/merge) into the head branch,
     // we may see the unrelated diff in the pull request diff.
     // To avoid that issue, recreate a merge commit by base into head strategy.
     // https://github.com/int128/update-generated-files-action/issues/351
+
+    await git.checkout(headSHA)
+    if (await git.tryCherryPick(workspaceChangeSHA)) {
+      core.info(`Updating the head branch ${headRef}`)
+      await git.showGraph()
+      await git.push({ ref: `refs/heads/${headRef}`, token: inputs.token })
+      if (context.payload.action === 'opened' || context.payload.action === 'synchronize') {
+        // Fail if the head ref is outdated
+        core.summary.addRaw(`Added a commit. CI should pass on the new commit.`)
+        await core.summary.write()
+        throw new Error(`Added a commit. CI should pass on the new commit.`)
+      }
+      return {}
+    }
+
+
+    
     core.info(`Re-merging base branch into head branch`)
-    await git.stash()
-    await recreateMergeCommit(currentSHA, inputs, context)
-    await git.stashPop()
+    await git.checkout(headSHA)
+    await recreateMergeCommit(checkoutSHA, inputs, context)
+    await git.tryCherryPick(workspaceChangeSHA)
+    core.info(`Updating the head branch ${headRef}`)
+    await git.showGraph()
+    await git.push({ ref: `refs/heads/${headRef}`, token: inputs.token })
+    if (context.payload.action === 'opened' || context.payload.action === 'synchronize') {
+      // Fail if the head ref is outdated
+      core.summary.addRaw(`Added a commit. CI should pass on the new commit.`)
+      await core.summary.write()
+      throw new Error(`Added a commit. CI should pass on the new commit.`)
+    }
+    return {}
   }
 
-  const headRef = context.payload.pull_request.head.ref
   core.info(`Updating the head branch ${headRef}`)
-  await git.commit(`${inputs.commitMessage}\n\n${inputs.commitMessageFooter}`)
   await git.showGraph()
   await git.push({ ref: `refs/heads/${headRef}`, token: inputs.token })
-
-  core.summary.addRaw(`Added a commit. CI should pass on the new commit.`)
-  await core.summary.write()
-
   if (context.payload.action === 'opened' || context.payload.action === 'synchronize') {
-    // fail if the head ref is outdated
+    // Fail if the head ref is outdated
+    core.summary.addRaw(`Added a commit. CI should pass on the new commit.`)
+    await core.summary.write()
     throw new Error(`Added a commit. CI should pass on the new commit.`)
   }
   return {}

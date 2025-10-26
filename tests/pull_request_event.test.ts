@@ -40,7 +40,6 @@ describe('pull request event', () => {
 
     await handlePullRequestEvent(inputs, context as Context<PullRequestEvent>)
 
-    expect(git.stash).toHaveBeenCalledTimes(1)
     expect(git.checkout).toHaveBeenCalledWith('0123456789abcdef-head')
     expect(git.merge).toHaveBeenCalledWith(
       '0123456789abcdef-latest-base',
@@ -49,7 +48,6 @@ describe('pull request event', () => {
 Updated the head branch since the current workflow is running on the merge commit.
 https://github.com/int128/update-generated-files-action/actions/runs/4309709120`,
     )
-    expect(git.stashPop).toHaveBeenCalledTimes(1)
     expect(git.commit).toHaveBeenCalledWith(`Autofix (workflow / job)
 
 https://github.com/int128/update-generated-files-action/actions/runs/4309709120`)

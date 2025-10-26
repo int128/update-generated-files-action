@@ -48,12 +48,8 @@ export const merge = async (sha: string, message: string) =>
 export const canMerge = async (base: string, head: string): Promise<boolean> =>
   (await exec.exec('git', ['merge-base', base, head], { ignoreReturnCode: true })) === 0
 
-export const stash = async () => {
-  await exec.exec('git', ['add', '.'])
-  await exec.exec('git', ['stash'])
-}
-
-export const stashPop = async () => await exec.exec('git', ['stash', 'pop'])
+export const tryCherryPick = async (sha: string): Promise<boolean> =>
+  (await exec.exec('git', ['cherry-pick', sha], { ignoreReturnCode: true })) === 0
 
 export const commit = async (message: string) => {
   await exec.exec('git', ['add', '.'])
