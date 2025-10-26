@@ -73,13 +73,7 @@ const cherryPickWorkspaceChangesOntoMergeCommit = async (inputs: Inputs, context
   await git.checkout(headSHA)
   const headRef = context.payload.pull_request.head.ref
   const baseRef = context.payload.pull_request.base.ref
-  await git.merge(
-    baseSHA,
-    `Merge branch '${baseRef}' into ${headRef}
-
-Updated the head branch since the current workflow is running on the merge commit.
-${inputs.commitMessageFooter}`,
-  )
+  await git.merge(baseSHA, `Merge branch '${baseRef}' into ${headRef}`)
   await git.cherryPick(workspaceChangeSHA)
 }
 
