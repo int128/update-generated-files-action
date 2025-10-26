@@ -1,3 +1,4 @@
+import assert from 'node:assert'
 import * as core from '@actions/core'
 import type { PullRequestEvent } from '@octokit/webhooks-types'
 import * as git from './git.js'
@@ -24,7 +25,7 @@ export const handlePullRequestEvent = async (inputs: Inputs, context: Context<Pu
 
   const checkoutSHA = await git.getCurrentSHA()
   if (checkoutSHA === context.sha) {
-    await updateHeadRefBasedOnMergeCommit(inputs, context)
+    await updateHeadBasedOnMergeCommit(inputs, context)
   } else {
     await git.commit(`${inputs.commitMessage}\n\n${inputs.commitMessageFooter}`)
     const headRef = context.payload.pull_request.head.ref
@@ -42,23 +43,15 @@ export const handlePullRequestEvent = async (inputs: Inputs, context: Context<Pu
   return {}
 }
 
-const updateHeadRefBasedOnMergeCommit = async (inputs: Inputs, context: Context<PullRequestEvent>) => {
+const updateHeadBasedOnMergeCommit = async (inputs: Inputs, context: Context<PullRequestEvent>) => {
+  await git.commit(`${inputs.commitMessage}\n\n${inputs.commitMessageFooter}`)
+  const workspaceChangeSHA = await git.getCurrentSHA()
+
   const parentSHAs = await git.getParentSHAs(context.sha)
   const headSHA = context.payload.pull_request.head.sha
   const baseSHA = parentSHAs.filter((sha) => sha !== headSHA).pop()
-  if (baseSHA === undefined) {
-    throw new Error(`could not determine base commit from parents ${String(parentSHAs)}`)
-  }
-  for (let depth = 50; depth < 1000; depth += 50) {
-    if (await git.canMerge(baseSHA, headSHA)) {
-      break
-    }
-    core.info(`Fetching more commits (depth ${depth})`)
-    await git.fetch({ refs: [baseSHA, headSHA], depth, token: inputs.token })
-  }
-
-  await git.commit(`${inputs.commitMessage}\n\n${inputs.commitMessageFooter}`)
-  const workspaceChangeSHA = await git.getCurrentSHA()
+  assert(baseSHA !== undefined, `context.sha ${context.sha} must be a merge commit`)
+  await fetchCommitsBetweenBaseHead(baseSHA, headSHA, inputs.token)
 
   const headRef = context.payload.pull_request.head.ref
   const baseRef = context.payload.pull_request.base.ref
@@ -84,8 +77,20 @@ const updateHeadRefBasedOnMergeCommit = async (inputs: Inputs, context: Context<
 Updated the head branch since the current workflow is running on the merge commit.
 ${inputs.commitMessageFooter}`,
   )
-  await git.tryCherryPick(workspaceChangeSHA)
+  if (!(await git.tryCherryPick(workspaceChangeSHA))) {
+    throw new Error(`Failed to cherry-pick the workspace changes onto the merged commit`)
+  }
   core.info(`Updating the head branch ${headRef}`)
   await git.showGraph()
   await git.push({ ref: `refs/heads/${headRef}`, token: inputs.token })
+}
+
+const fetchCommitsBetweenBaseHead = async (baseSHA: string, headSHA: string, token: string) => {
+  for (let depth = 50; depth < 1000; depth += 50) {
+    if (await git.canMerge(baseSHA, headSHA)) {
+      core.info(`Fetched required commits to merge base and head`)
+      return
+    }
+    await git.fetch({ refs: [baseSHA, headSHA], depth, token })
+  }
 }
