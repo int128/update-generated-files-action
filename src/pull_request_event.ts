@@ -75,9 +75,9 @@ const recreateMergeCommit = async (currentSHA: string, inputs: Inputs, context: 
   await git.checkout(headSHA)
   await git.merge(
     baseSHA,
-    `Merge branch ${baseRef} ${baseSHA} into ${headRef} ${headSHA}
+    `Merge branch '${baseRef}' into ${headRef}
 
-Recreated a merge commit from ${currentSHA} by GitHub Actions
+Updated the head branch since the current workflow is running on the merge commit.
 ${inputs.commitMessageFooter}`,
   )
 }
