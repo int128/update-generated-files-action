@@ -83,10 +83,12 @@ ${inputs.commitMessageFooter}`,
   await git.push({ ref: `refs/heads/${headRef}`, token: inputs.token })
 }
 
+
+
 const fetchCommitsBetweenBaseHead = async (baseSHA: string, headSHA: string, token: string) => {
   for (let depth = 50; depth < 1000; depth += 50) {
     if (await git.canMerge(baseSHA, headSHA)) {
-      core.info(`Fetched required commits to merge base and head`)
+      core.info(`Fetched commits required to merge base and head`)
       return
     }
     await git.fetch({ refs: [baseSHA, headSHA], depth, token })
