@@ -49,9 +49,7 @@ export const canMerge = async (base: string, head: string): Promise<boolean> =>
   (await exec.exec('git', ['merge-base', base, head], { ignoreReturnCode: true })) === 0
 
 export const tryCherryPick = async (sha: string): Promise<boolean> => {
-  const code = await exec.exec('git', ['-c', 'advice.mergeConflict=false', 'cherry-pick', sha], {
-    ignoreReturnCode: true,
-  })
+  const code = await exec.exec('git', ['cherry-pick', sha], { ignoreReturnCode: true })
   if (code === 0) {
     return true
   }
