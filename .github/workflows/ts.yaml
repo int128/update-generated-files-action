@@ -33,8 +33,6 @@ jobs:
       - run: pnpm biome check --fix
       - run: pnpm build
 
-      # [DO NOT MERGE]
-      - run: echo >> .github/renovate.json
       - name: update-generated-files
         uses: ./
 
