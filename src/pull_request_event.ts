@@ -77,9 +77,7 @@ const updateHeadBasedOnMergeCommit = async (inputs: Inputs, context: Context<Pul
 Updated the head branch since the current workflow is running on the merge commit.
 ${inputs.commitMessageFooter}`,
   )
-  if (!(await git.tryCherryPick(workspaceChangeSHA))) {
-    throw new Error(`Failed to cherry-pick the workspace changes onto the merged commit`)
-  }
+  await git.cherryPick(workspaceChangeSHA)
   core.info(`Updating the head branch ${headRef}`)
   await git.showGraph()
   await git.push({ ref: `refs/heads/${headRef}`, token: inputs.token })
