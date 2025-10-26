@@ -1,3 +1,4 @@
+import assert from 'node:assert'
 import * as core from '@actions/core'
 import type { PullRequestEvent } from '@octokit/webhooks-types'
 import * as git from './git.js'
@@ -22,62 +23,64 @@ export const handlePullRequestEvent = async (inputs: Inputs, context: Context<Pu
     )
   }
 
-  const currentSHA = await git.getCurrentSHA()
-  if (currentSHA === context.sha) {
-    // If this action pushes the merge commit (refs/pull/x/merge) into the head branch,
-    // we may see the unrelated diff in the pull request diff.
-    // To avoid that issue, recreate a merge commit by base into head strategy.
-    // https://github.com/int128/update-generated-files-action/issues/351
-    core.info(`Re-merging base branch into head branch`)
-    await git.stash()
-    await recreateMergeCommit(currentSHA, inputs, context)
-    await git.stashPop()
+  if (await currentCommitIsMergeCommit(context)) {
+    await cherryPickWorkspaceChangesOntoMergeCommit(inputs, context)
+  } else {
+    core.info(`Committing the workspace changes on the head branch directly`)
+    await git.commit(`${inputs.commitMessage}\n\n${inputs.commitMessageFooter}`)
   }
 
   const headRef = context.payload.pull_request.head.ref
   core.info(`Updating the head branch ${headRef}`)
-  await git.commit(`${inputs.commitMessage}\n\n${inputs.commitMessageFooter}`)
   await git.showGraph()
   await git.push({ ref: `refs/heads/${headRef}`, token: inputs.token })
 
-  core.summary.addRaw(`Added a commit. CI should pass on the new commit.`)
-  await core.summary.write()
-
   if (context.payload.action === 'opened' || context.payload.action === 'synchronize') {
-    // fail if the head ref is outdated
+    // Fail if the head ref is outdated
+    core.summary.addRaw(`Added a commit. CI should pass on the new commit.`)
+    await core.summary.write()
     throw new Error(`Added a commit. CI should pass on the new commit.`)
   }
   return {}
 }
 
-const recreateMergeCommit = async (currentSHA: string, inputs: Inputs, context: Context<PullRequestEvent>) => {
-  const parentSHAs = await git.getParentSHAs(currentSHA)
+const currentCommitIsMergeCommit = async (context: Context<PullRequestEvent>): Promise<boolean> =>
+  (await git.getCurrentSHA()) === context.sha
+
+const cherryPickWorkspaceChangesOntoMergeCommit = async (inputs: Inputs, context: Context<PullRequestEvent>) => {
+  core.info(`Cherry-pick the workspace changes onto the merge commit`)
+  await git.commit(`${inputs.commitMessage}\n\n${inputs.commitMessageFooter}`)
+  const workspaceChangeSHA = await git.getCurrentSHA()
+
+  const parentSHAs = await git.getParentSHAs(context.sha)
   const headSHA = context.payload.pull_request.head.sha
   const baseSHA = parentSHAs.filter((sha) => sha !== headSHA).pop()
-  if (baseSHA === undefined) {
-    core.warning(`Could not determine base commit from parents ${String(parentSHAs)}`)
+  assert(baseSHA !== undefined, `context.sha ${context.sha} must be a merge commit`)
+  await fetchCommitsBetweenBaseHead(baseSHA, headSHA, inputs.token)
+
+  await git.checkout(headSHA)
+  if (await git.tryCherryPick(workspaceChangeSHA)) {
     return
   }
+
+  // If this action pushes the merge commit (refs/pull/x/merge) into the head branch,
+  // we may see the unrelated diff in the pull request diff.
+  // To avoid that issue, recreate a merge commit by base into head strategy.
+  // https://github.com/int128/update-generated-files-action/issues/351
+  core.info(`Re-merging base branch into head branch`)
+  await git.checkout(headSHA)
   const headRef = context.payload.pull_request.head.ref
   const baseRef = context.payload.pull_request.base.ref
-  core.info(`head: ${headSHA} ${headRef}`)
-  core.info(`base: ${baseSHA} ${baseRef}`)
+  await git.merge(baseSHA, `Merge branch '${baseRef}' into ${headRef}`)
+  await git.cherryPick(workspaceChangeSHA)
+}
 
+const fetchCommitsBetweenBaseHead = async (baseSHA: string, headSHA: string, token: string) => {
   for (let depth = 50; depth < 1000; depth += 50) {
-    core.info(`Fetching more commits (depth ${depth})`)
-    await git.fetch({ refs: [baseSHA, headSHA], depth, token: inputs.token })
     if (await git.canMerge(baseSHA, headSHA)) {
-      break
+      core.info(`Fetched commits required to merge base and head`)
+      return
     }
+    await git.fetch({ refs: [baseSHA, headSHA], depth, token })
   }
-
-  await git.showGraph()
-  await git.checkout(headSHA)
-  await git.merge(
-    baseSHA,
-    `Merge branch '${baseRef}' into ${headRef}
-
-Updated the head branch since the current workflow is running on the merge commit.
-${inputs.commitMessageFooter}`,
-  )
 }
