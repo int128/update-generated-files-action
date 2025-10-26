@@ -53,11 +53,9 @@ const updateHeadBasedOnMergeCommit = async (inputs: Inputs, context: Context<Pul
   assert(baseSHA !== undefined, `context.sha ${context.sha} must be a merge commit`)
   await fetchCommitsBetweenBaseHead(baseSHA, headSHA, inputs.token)
 
-  const headRef = context.payload.pull_request.head.ref
-  const baseRef = context.payload.pull_request.base.ref
-
   await git.checkout(headSHA)
   if (await git.tryCherryPick(workspaceChangeSHA)) {
+    const headRef = context.payload.pull_request.head.ref
     core.info(`Updating the head branch ${headRef}`)
     await git.showGraph()
     await git.push({ ref: `refs/heads/${headRef}`, token: inputs.token })
@@ -70,6 +68,8 @@ const updateHeadBasedOnMergeCommit = async (inputs: Inputs, context: Context<Pul
   // https://github.com/int128/update-generated-files-action/issues/351
   core.info(`Re-merging base branch into head branch`)
   await git.checkout(headSHA)
+  const headRef = context.payload.pull_request.head.ref
+  const baseRef = context.payload.pull_request.base.ref
   await git.merge(
     baseSHA,
     `Merge branch '${baseRef}' into ${headRef}
