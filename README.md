@@ -5,9 +5,9 @@ It is equivalent to `git commit && git push origin` command.
 
 You can use this action for the following use cases:
 
-- Format code such as Prettier, dprint or `gofmt`
+- Formatter such as Prettier, dprint or gofmt
+- Linter such as ESLint, Biome or golangci-lint
 - Update a lock file such as `package-lock.json`, `yarn.lock` or `go.sum`
-- ESLint with `--fix`
 - OpenAPI Generator
 - GraphQL Code Generator
 
@@ -31,26 +31,30 @@ jobs:
       contents: write # Required to push a commit
       pull-requests: write # Required to create a pull request
     steps:
-      - uses: actions/checkout@v4
-
+      - uses: actions/checkout@v5
       # Something to generate files
-      - run: yarn graphql-codegen
-
-      # If the generated files are updated, this action pushes a commit.
+      - run: pnpm run graphql-codegen
+      # When the workspace is changed, this action will push a commit.
       - uses: int128/update-generated-files-action@v2
 ```
 
-### How it works on `pull_request` event
+## How it works
 
-If `yarn graphql-codegen` updated your code, this action pushes a new commit.
+### On `pull_request` event
 
-<img width="870" alt="image" src="https://user-images.githubusercontent.com/321266/232302693-7eace408-52be-488b-897e-27594d391611.png">
+If the working directory has been changed, this action pushes a new commit.
+Otherwise, it does nothing.
 
-This action intentionally exits with the error to prevent Renovate or Dependabot from auto-merging the pull request.
+When this action is triggered on `opened` or `synchronize` type of `pull_request` event,
+it intentionally exits with the error to prevent Renovate or Dependabot from auto-merging the pull request.
 
-<img width="870" alt="image" src="https://user-images.githubusercontent.com/321266/232303622-a4d7b868-5300-4dda-b1e5-9ef0e8d5985b.png">
+```console
+Error: Added a commit. CI should pass on the new commit.
+```
 
-If the working directory has no change, this action does nothing.
+When the workspace is checked out from [the merge branch](https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#pull_request),
+this action cherry-picks the changes onto the head branch of the pull request.
+If it conflicts, the action merges the base branch into the head branch and then cherry-picks the changes.
 
 You can customize the commit as follows:
 
@@ -61,27 +65,20 @@ jobs:
       - uses: int128/update-generated-files-action@v2
         with:
           # Set a custom message to the new commit (optional)
-          commit-message: 'Fix: yarn graphql-codegen'
+          commit-message: "fix: graphql-codegen"
 ```
 
-### How it works on `push` or other events
+### On other events
 
-When the workflow is run on other events such as `push` or `schedule`,
-this action tries to apply the current change by the following order:
+When this action is triggered on other events such as `push` or `schedule`,
+it tries to apply the change by the following order:
 
-1. Push the current change into the branch by fast-forward
-2. Create a pull request for the branch
+1. Push the change into the branch by fast-forward.
+2. Create a pull request for the branch.
 
-If the working directory has no change, this action does nothing.
-
-For example, if `yarn graphql-codegen` updated your code,
-this action pushes a new commit to `main` branch.
-
-<img width="1050" alt="image" src="https://user-images.githubusercontent.com/321266/222304713-6048e97f-9db1-4208-9bff-45892c14c47c.png">
-
-If this action could not push it due to the branch rule, it creates a new pull request.
-
-<img width="920" alt="image" src="https://user-images.githubusercontent.com/321266/232307473-9180533d-898a-4192-a856-3cc695552162.png">
+For example, when this action is triggered on `push` event to `main` branch,
+it pushes a new commit to `main` branch.
+If it could not push it due to the branch rule, it creates a new pull request.
 
 This action requests a review to the current actor by default.
 If `reviewers` input is set, it requests a review to the specified users or teams.
@@ -108,24 +105,23 @@ jobs:
           labels: |
             updated-graphql-codegen
           # Set a custom message to the new commit (optional)
-          commit-message: 'Fix: yarn graphql-codegen'
+          commit-message: "fix: graphql-codegen"
 ```
 
 ## Best practices
 
-### Trigger GitHub Actions on the new commit
+### Trigger a workflow on the new commit
 
-This action uses the default token by default, but [it does not trigger a workflow](https://docs.github.com/en/actions/using-workflows/triggering-a-workflow#triggering-a-workflow-from-a-workflow) on the new commit.
-You need to reopen a pull request to trigger a workflow.
+The default token does not trigger a workflow on the new commit due to [the specification of GitHub Actions](https://docs.github.com/en/actions/using-workflows/triggering-a-workflow#triggering-a-workflow-from-a-workflow).
 
-To trigger a workflow on the new commit, you need to set a personal access token or GitHub App token.
+To trigger a workflow on the new commit, you need to explicitly set a GitHub token.
 
 ```yaml
 jobs:
   generate:
     steps:
-      - uses: actions/create-github-app-token@v1
-        id: ci-token
+      - id: ci-token
+        uses: actions/create-github-app-token@v1
         with:
           app-id: ${{ secrets.YOUR_CI_GITHUB_APP_ID }}
           private-key: ${{ secrets.YOUR_CI_GITHUB_APP_PRIVATE_KEY }}
@@ -134,38 +130,19 @@ jobs:
           token: ${{ steps.ci-token.outputs.token }}
 ```
 
-### Maintain code by owners
-
-It is recommended to set **CODEOWNERS** to receive a review request when this action creates a pull request.
-Alternatively, you can set the reviewers, for example,
-
-```yaml
-jobs:
-  generate:
-    steps:
-      - uses: int128/update-generated-files-action@v2
-        with:
-          reviewers: |
-            your-organization/frontend-devs
-```
-
-### Work with Renovate or Dependabot
+### Working with Renovate or Dependabot
 
 You can update both dependencies and generated files as follows:
 
-1. Renovate creates a pull request to update a dependency
-1. GitHub Actions triggers a workflow
-1. This action pushes a change if it exists
-1. GitHub Actions triggers a workflow against the new commit
-
-If the generated files are inconsistent, automerge will be stopped due to the failure of this action.
+1. Renovate or Dependabot creates a pull request to update a dependency.
+1. GitHub Actions triggers the workflow.
+1. If the workspace is changed, this action adds a commit to the pull request.
+   It intentionally exits with the error to prevent auto-merging.
+1. GitHub Actions triggers the workflow against the new commit.
 
 ## Specification
 
-If the last 5 commits are added by this action, it exits with an error to prevent the infinite loop.
-
-By default, `actions/checkout` checks out [the merge branch](https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#pull_request).
-This action works on both merge branch or head branch.
+If the last 5 commits were committed by this action, it exits with an error to prevent the infinite loop.
 
 ### Inputs
 
@@ -191,10 +168,9 @@ This action works on both merge branch or head branch.
 
 ### Exit status
 
-If the working directory does not have git-diff, this action exits successfully.
+If git-diff returns no changes, this action exits successfully.
 
-If the working directory has git-diff,
-this action exits with the following status:
+If git-diff returns changes, this action exits with the following status:
 
 - When triggered on `push` event, it exits with the error.
   It indicates that the branch is inconsistent state.
@@ -208,10 +184,10 @@ If you need to refer the outputs after this action, you can specify `always()` i
 For example,
 
 ```yaml
-- uses: int128/update-generated-files-action
-  id: update-generated-files
-
-# Something to manipulate the created pull request
-- if: always() && steps.update-generated-files.outputs.pull-request-number != ''
-  run: gh pr ${{ steps.update-generated-files.outputs.pull-request-number }}
+steps:
+  - id: update-generated-files
+    uses: int128/update-generated-files-action
+  # Something to manipulate the created pull request
+  - if: always() && steps.update-generated-files.outputs.pull-request-number != ''
+    run: gh pr edit ${{ steps.update-generated-files.outputs.pull-request-number }}
 ```
