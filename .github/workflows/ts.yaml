@@ -30,7 +30,7 @@ jobs:
           package-manager-cache: false
       - run: npm install -g pnpm@latest-10
       - run: pnpm i
-      - run: pnpm biome check --fix
+      - run: pnpm run check
       - run: pnpm build
 
       - name: update-generated-files
