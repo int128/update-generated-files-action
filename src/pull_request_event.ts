@@ -7,7 +7,7 @@ import type { Outputs } from './run.js'
 
 const LIMIT_REPEATED_COMMITS = 5
 
-type Inputs = {
+export type Inputs = {
   commitMessage: string
   commitMessageFooter: string
   dryRun: boolean
