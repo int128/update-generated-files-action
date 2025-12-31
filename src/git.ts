@@ -4,6 +4,8 @@ import * as exec from '@actions/exec'
 export const AUTHOR_NAME = 'update-generated-files-action'
 export const AUTHOR_EMAIL = '41898282+github-actions[bot]@users.noreply.github.com'
 
+const authorFlags: readonly string[] = ['-c', `user.name=${AUTHOR_NAME}`, '-c', `user.email=${AUTHOR_EMAIL}`]
+
 export const status = async (): Promise<string> => {
   const { stdout } = await exec.getExecOutput('git', ['status', '--porcelain'])
   return stdout.trim()
@@ -38,15 +40,15 @@ export const showGraph = async () =>
 export const checkout = async (sha: string) => await exec.exec('git', ['checkout', sha])
 
 export const merge = async (sha: string, message: string) =>
-  await exec.exec('git', ['merge', '--no-ff', '-m', message, sha])
+  await exec.exec('git', [...authorFlags, 'merge', '--no-ff', '-m', message, sha])
 
 export const canMerge = async (base: string, head: string): Promise<boolean> =>
   (await exec.exec('git', ['merge-base', base, head], { ignoreReturnCode: true })) === 0
 
-export const cherryPick = async (sha: string) => await exec.exec('git', ['cherry-pick', sha])
+export const cherryPick = async (sha: string) => await exec.exec('git', [...authorFlags, 'cherry-pick', sha])
 
 export const tryCherryPick = async (sha: string): Promise<boolean> => {
-  const code = await exec.exec('git', ['cherry-pick', sha], { ignoreReturnCode: true })
+  const code = await exec.exec('git', [...authorFlags, 'cherry-pick', sha], { ignoreReturnCode: true })
   if (code === 0) {
     return true
   }
@@ -57,10 +59,7 @@ export const tryCherryPick = async (sha: string): Promise<boolean> => {
 export const commit = async (message: string, additionalMessages: string[]) => {
   await exec.exec('git', ['add', '.'])
   await exec.exec('git', [
-    '-c',
-    `user.name=${AUTHOR_NAME}`,
-    '-c',
-    `user.email=${AUTHOR_EMAIL}`,
+    ...authorFlags,
     'commit',
     '--quiet',
     '-m',
