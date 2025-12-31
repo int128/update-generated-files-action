@@ -4,11 +4,6 @@ import * as exec from '@actions/exec'
 export const AUTHOR_NAME = 'update-generated-files-action'
 export const AUTHOR_EMAIL = '41898282+github-actions[bot]@users.noreply.github.com'
 
-export const configureAuthor = async () => {
-  await exec.exec('git', ['config', 'user.name', AUTHOR_NAME])
-  await exec.exec('git', ['config', 'user.email', AUTHOR_EMAIL])
-}
-
 export const status = async (): Promise<string> => {
   const { stdout } = await exec.getExecOutput('git', ['status', '--porcelain'])
   return stdout.trim()
@@ -59,33 +54,41 @@ export const tryCherryPick = async (sha: string): Promise<boolean> => {
   return false
 }
 
-export const commit = async (message: string) => {
+export const commit = async (message: string, additionalMessages: string[]) => {
   await exec.exec('git', ['add', '.'])
-  await exec.exec('git', ['commit', '-m', message])
+  await exec.exec('git', [
+    '-c',
+    `user.name=${AUTHOR_NAME}`,
+    '-c',
+    `user.email=${AUTHOR_EMAIL}`,
+    'commit',
+    '--quiet',
+    '-m',
+    message,
+    ...additionalMessages.flatMap((message) => ['-m', message]),
+  ])
 }
 
 type FetchInput = {
   refs: string[]
   depth: number
-  token: string
 }
 
 export const fetch = async (input: FetchInput) =>
-  await execWithToken(input.token, ['fetch', 'origin', `--depth=${input.depth}`, ...input.refs])
+  await execWithToken(['fetch', 'origin', `--depth=${input.depth}`, ...input.refs])
 
 type PushInput = {
   ref: string
-  token: string
   ignoreReturnCode?: boolean
 }
 
 export const push = async (input: PushInput) =>
-  await execWithToken(input.token, ['push', 'origin', `HEAD:${input.ref}`], {
+  await execWithToken(['push', 'origin', `HEAD:${input.ref}`], {
     ignoreReturnCode: input.ignoreReturnCode,
   })
 
-const execWithToken = async (token: string, args: readonly string[], options?: exec.ExecOptions) => {
-  const credentials = Buffer.from(`x-access-token:${token}`).toString('base64')
+const execWithToken = async (args: readonly string[], options?: exec.ExecOptions) => {
+  const credentials = Buffer.from(`x-access-token:${core.getInput('token')}`).toString('base64')
   core.setSecret(credentials)
   return await exec.exec(
     'git',

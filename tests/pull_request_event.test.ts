@@ -13,7 +13,6 @@ describe('pull request event', () => {
   const inputs = {
     commitMessage: 'Autofix (workflow / job)',
     commitMessageFooter: 'https://github.com/int128/update-generated-files-action/actions/runs/4309709120',
-    token: 'GITHUB_TOKEN',
   }
   const context = {
     sha: '0123456789abcdef-merge',
@@ -42,9 +41,9 @@ describe('pull request event', () => {
 
     expect(git.checkout).toHaveBeenCalledWith('0123456789abcdef-head')
     expect(git.merge).toHaveBeenCalledWith('0123456789abcdef-latest-base', `Merge branch 'main' into topic`)
-    expect(git.commit).toHaveBeenCalledWith(`Autofix (workflow / job)
-
-https://github.com/int128/update-generated-files-action/actions/runs/4309709120`)
+    expect(git.commit).toHaveBeenCalledWith(`Autofix (workflow / job)`, [
+      `https://github.com/int128/update-generated-files-action/actions/runs/4309709120`,
+    ])
     expect(git.push).toHaveBeenCalledTimes(1)
   })
 
@@ -55,9 +54,9 @@ https://github.com/int128/update-generated-files-action/actions/runs/4309709120`
 
     expect(git.checkout).not.toHaveBeenCalled()
     expect(git.merge).not.toHaveBeenCalled()
-    expect(git.commit).toHaveBeenCalledWith(`Autofix (workflow / job)
-
-https://github.com/int128/update-generated-files-action/actions/runs/4309709120`)
+    expect(git.commit).toHaveBeenCalledWith(`Autofix (workflow / job)`, [
+      `https://github.com/int128/update-generated-files-action/actions/runs/4309709120`,
+    ])
     expect(git.push).toHaveBeenCalledTimes(1)
   })
 

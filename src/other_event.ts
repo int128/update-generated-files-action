@@ -12,11 +12,11 @@ export const handleOtherEvent = async (inputs: Inputs, context: Context, octokit
     return {}
   }
 
-  await git.commit(`${inputs.commitMessage}\n\n${inputs.commitMessageFooter}`)
+  await git.commit(inputs.commitMessage, [inputs.commitMessageFooter])
   // do not change the current HEAD from here
 
   core.info(`Trying to update ${context.ref} by fast-forward`)
-  if (await updateRefByFastForward(inputs, context)) {
+  if (await updateRefByFastForward(context)) {
     core.summary.addHeading(`GitHub Actions automatically updated the generated files in ${context.ref}`)
     await core.summary.write()
     if (context.eventName === 'push') {
@@ -41,16 +41,16 @@ export const handleOtherEvent = async (inputs: Inputs, context: Context, octokit
   }
 }
 
-const updateRefByFastForward = async (inputs: Inputs, context: Context): Promise<boolean> => {
+const updateRefByFastForward = async (context: Context): Promise<boolean> => {
   core.info(`Checking the last commits to prevent infinite loop`)
-  await git.fetch({ refs: [context.sha], depth: LIMIT_REPEATED_COMMITS, token: inputs.token })
+  await git.fetch({ refs: [context.sha], depth: LIMIT_REPEATED_COMMITS })
   const lastAuthorNames = await git.getAuthorNameOfCommits(context.sha, LIMIT_REPEATED_COMMITS)
   if (lastAuthorNames.every((authorName) => authorName === git.AUTHOR_NAME)) {
     core.error(`This action has been called ${lastAuthorNames.length} times. Do not push to prevent infinite loop`)
     return false
   }
 
-  const code = await git.push({ ref: context.ref, token: inputs.token, ignoreReturnCode: true })
+  const code = await git.push({ ref: context.ref, ignoreReturnCode: true })
   if (code !== 0) {
     core.info(`Failed to update ${context.ref} by fast-forward: git returned code ${code}`)
     return false
@@ -67,7 +67,7 @@ type PullRequest = {
 const createPull = async (inputs: Inputs, context: Context, octokit: Octokit): Promise<PullRequest> => {
   const head = inputs.headBranch.replaceAll(/[^\w]/g, '-')
   core.info(`Creating a new branch ${head}`)
-  await git.push({ ref: `refs/heads/${head}`, token: inputs.token })
+  await git.push({ ref: `refs/heads/${head}` })
 
   const base = context.ref.replace(/^refs\/heads\//, '')
   core.info(`Creating a pull request for ${base} branch`)

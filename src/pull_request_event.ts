@@ -10,12 +10,11 @@ const LIMIT_REPEATED_COMMITS = 5
 type Inputs = {
   commitMessage: string
   commitMessageFooter: string
-  token: string
 }
 
 export const handlePullRequestEvent = async (inputs: Inputs, context: Context<PullRequestEvent>): Promise<Outputs> => {
   const headSHA = context.payload.pull_request.head.sha
-  await git.fetch({ refs: [headSHA], depth: LIMIT_REPEATED_COMMITS, token: inputs.token })
+  await git.fetch({ refs: [headSHA], depth: LIMIT_REPEATED_COMMITS })
   const lastAuthorNames = await git.getAuthorNameOfCommits(headSHA, LIMIT_REPEATED_COMMITS)
   if (lastAuthorNames.every((authorName) => authorName === git.AUTHOR_NAME)) {
     throw new Error(
@@ -27,13 +26,13 @@ export const handlePullRequestEvent = async (inputs: Inputs, context: Context<Pu
     await cherryPickWorkspaceChangesOntoMergeCommit(inputs, context)
   } else {
     core.info(`Committing the workspace changes on the head branch directly`)
-    await git.commit(`${inputs.commitMessage}\n\n${inputs.commitMessageFooter}`)
+    await git.commit(inputs.commitMessage, [inputs.commitMessageFooter])
   }
 
   const headRef = context.payload.pull_request.head.ref
   core.info(`Updating the head branch ${headRef}`)
   await git.showGraph()
-  await git.push({ ref: `refs/heads/${headRef}`, token: inputs.token })
+  await git.push({ ref: `refs/heads/${headRef}` })
 
   if (context.payload.action === 'opened' || context.payload.action === 'synchronize') {
     // Fail if the head ref is outdated
@@ -49,14 +48,14 @@ const currentCommitIsMergeCommit = async (context: Context<PullRequestEvent>): P
 
 const cherryPickWorkspaceChangesOntoMergeCommit = async (inputs: Inputs, context: Context<PullRequestEvent>) => {
   core.info(`Cherry-pick the workspace changes onto the merge commit`)
-  await git.commit(`${inputs.commitMessage}\n\n${inputs.commitMessageFooter}`)
+  await git.commit(inputs.commitMessage, [inputs.commitMessageFooter])
   const workspaceChangeSHA = await git.getCurrentSHA()
 
   const parentSHAs = await git.getParentSHAs(context.sha)
   const headSHA = context.payload.pull_request.head.sha
   const baseSHA = parentSHAs.filter((sha) => sha !== headSHA).pop()
   assert(baseSHA !== undefined, `context.sha ${context.sha} must be a merge commit`)
-  await fetchCommitsBetweenBaseHead(baseSHA, headSHA, inputs.token)
+  await fetchCommitsBetweenBaseHead(baseSHA, headSHA)
 
   await git.checkout(headSHA)
   if (await git.tryCherryPick(workspaceChangeSHA)) {
@@ -75,12 +74,12 @@ const cherryPickWorkspaceChangesOntoMergeCommit = async (inputs: Inputs, context
   await git.cherryPick(workspaceChangeSHA)
 }
 
-const fetchCommitsBetweenBaseHead = async (baseSHA: string, headSHA: string, token: string) => {
+const fetchCommitsBetweenBaseHead = async (baseSHA: string, headSHA: string) => {
   for (let depth = 50; depth < 1000; depth += 50) {
     if (await git.canMerge(baseSHA, headSHA)) {
       core.info(`Fetched commits required to merge base and head`)
       return
     }
-    await git.fetch({ refs: [baseSHA, headSHA], depth, token })
+    await git.fetch({ refs: [baseSHA, headSHA], depth })
   }
 }
