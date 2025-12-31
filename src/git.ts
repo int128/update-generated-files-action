@@ -74,26 +74,21 @@ type FetchInput = {
 }
 
 export const fetch = async (input: FetchInput) =>
-  await execWithToken(['fetch', 'origin', `--depth=${input.depth}`, ...input.refs])
+  await exec.exec('git', [...tokenArgs(), 'fetch', 'origin', `--depth=${input.depth}`, ...input.refs])
 
 export const push = async (ref: string, options?: exec.ExecOptions) =>
-  await execWithToken(['push', 'origin', `HEAD:${ref}`], options)
+  await exec.exec('git', [...tokenArgs(), 'push', 'origin', `HEAD:${ref}`], options)
 
-const execWithToken = async (args: readonly string[], options?: exec.ExecOptions) => {
+const tokenArgs = () => {
   const credentials = Buffer.from(`x-access-token:${core.getInput('token')}`).toString('base64')
   core.setSecret(credentials)
-  return await exec.exec(
-    'git',
-    [
-      // reset extraheader set by actions/checkout
-      // https://github.com/actions/checkout/issues/162#issuecomment-590821598
-      '-c',
-      `http.https://github.com/.extraheader=`,
-      // replace the token
-      '-c',
-      `http.https://github.com/.extraheader=AUTHORIZATION: basic ${credentials}`,
-      ...args,
-    ],
-    options,
-  )
+  return [
+    // reset extraheader set by actions/checkout
+    // https://github.com/actions/checkout/issues/162#issuecomment-590821598
+    '-c',
+    `http.https://github.com/.extraheader=`,
+    // replace the token
+    '-c',
+    `http.https://github.com/.extraheader=AUTHORIZATION: basic ${credentials}`,
+  ]
 }
