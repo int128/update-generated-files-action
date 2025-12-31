@@ -76,15 +76,8 @@ type FetchInput = {
 export const fetch = async (input: FetchInput) =>
   await execWithToken(['fetch', 'origin', `--depth=${input.depth}`, ...input.refs])
 
-type PushInput = {
-  ref: string
-  ignoreReturnCode?: boolean
-}
-
-export const push = async (input: PushInput) =>
-  await execWithToken(['push', 'origin', `HEAD:${input.ref}`], {
-    ignoreReturnCode: input.ignoreReturnCode,
-  })
+export const push = async (ref: string, options?: exec.ExecOptions) =>
+  await execWithToken(['push', 'origin', `HEAD:${ref}`], options)
 
 const execWithToken = async (args: readonly string[], options?: exec.ExecOptions) => {
   const credentials = Buffer.from(`x-access-token:${core.getInput('token')}`).toString('base64')

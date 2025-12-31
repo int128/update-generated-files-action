@@ -37,7 +37,7 @@ export const handlePullRequestEvent = async (inputs: Inputs, context: Context<Pu
     core.warning(`[dry-run] git push ${headRef}`)
     return {}
   }
-  await git.push({ ref: `refs/heads/${headRef}` })
+  await git.push(`refs/heads/${headRef}`)
 
   if (context.payload.action === 'opened' || context.payload.action === 'synchronize') {
     // Fail if the head ref is outdated

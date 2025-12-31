@@ -56,8 +56,7 @@ test('follow up by fast-forward', async () => {
     `https://github.com/int128/update-generated-files-action/actions/runs/4309709120`,
   ])
   expect(git.push).toHaveBeenCalledTimes(1)
-  expect(git.push).toHaveBeenCalledWith({
-    ref: 'refs/heads/main',
+  expect(git.push).toHaveBeenCalledWith('refs/heads/main', {
     ignoreReturnCode: true,
   })
 })
@@ -115,13 +114,10 @@ test('fallback to pull-request', async () => {
     `https://github.com/int128/update-generated-files-action/actions/runs/4309709120`,
   ])
   expect(git.push).toHaveBeenCalledTimes(2)
-  expect(git.push).toHaveBeenCalledWith({
-    ref: 'refs/heads/main',
+  expect(git.push).toHaveBeenCalledWith('refs/heads/main', {
     ignoreReturnCode: true,
   })
-  expect(git.push).toHaveBeenCalledWith({
-    ref: 'refs/heads/update-generated-files--workflow--1--job--0',
-  })
+  expect(git.push).toHaveBeenCalledWith('refs/heads/update-generated-files--workflow--1--job--0')
 
   expect(octokitMock.rest.pulls.create).toHaveBeenCalledWith({
     owner: 'int128',

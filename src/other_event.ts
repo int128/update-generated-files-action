@@ -58,7 +58,7 @@ const updateRefByFastForward = async (inputs: Inputs, context: Context): Promise
     core.warning(`[dry-run] git push ${context.ref}`)
     return false
   }
-  const code = await git.push({ ref: context.ref, ignoreReturnCode: true })
+  const code = await git.push(context.ref, { ignoreReturnCode: true })
   if (code !== 0) {
     core.info(`Failed to update ${context.ref} by fast-forward: git returned code ${code}`)
     return false
@@ -75,7 +75,7 @@ type PullRequest = {
 const createPull = async (inputs: Inputs, context: Context, octokit: Octokit): Promise<PullRequest> => {
   const head = inputs.headBranch.replaceAll(/[^\w]/g, '-')
   core.info(`Creating a new branch ${head}`)
-  await git.push({ ref: `refs/heads/${head}` })
+  await git.push(`refs/heads/${head}`)
 
   const base = context.ref.replace(/^refs\/heads\//, '')
   core.info(`Creating a pull request for ${base} branch`)
