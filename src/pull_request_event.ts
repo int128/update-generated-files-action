@@ -35,7 +35,7 @@ export const handlePullRequestEvent = async (inputs: Inputs, context: Context<Pu
   const headRef = context.payload.pull_request.head.ref
   core.info(`Updating the head branch ${headRef}`)
   if (inputs.dryRun) {
-    core.info(`[dry-run] git push ${headRef}`)
+    core.warning(`[dry-run] git push ${headRef}`)
     return {}
   }
   await git.push({ ref: `refs/heads/${headRef}`, token: inputs.token })

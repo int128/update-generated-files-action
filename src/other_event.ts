@@ -27,7 +27,7 @@ export const handleOtherEvent = async (inputs: Inputs, context: Context, octokit
 
   core.info(`Falling back to create a pull request to follow up`)
   if (inputs.dryRun) {
-    core.info(`[dry-run] Create a pull request for ${context.ref}`)
+    core.warning(`[dry-run] Create a pull request for ${context.ref}`)
     return {}
   }
   const pull = await createPull(inputs, context, octokit)
@@ -55,7 +55,7 @@ const updateRefByFastForward = async (inputs: Inputs, context: Context): Promise
   }
 
   if (inputs.dryRun) {
-    core.info(`[dry-run] git push ${context.ref}`)
+    core.warning(`[dry-run] git push ${context.ref}`)
     return false
   }
   const code = await git.push({ ref: context.ref, token: inputs.token, ignoreReturnCode: true })
