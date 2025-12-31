@@ -10,6 +10,7 @@ const LIMIT_REPEATED_COMMITS = 5
 type Inputs = {
   commitMessage: string
   commitMessageFooter: string
+  dryRun: boolean
   token: string
 }
 
@@ -29,10 +30,14 @@ export const handlePullRequestEvent = async (inputs: Inputs, context: Context<Pu
     core.info(`Committing the workspace changes on the head branch directly`)
     await git.commit(`${inputs.commitMessage}\n\n${inputs.commitMessageFooter}`)
   }
+  await git.showGraph()
 
   const headRef = context.payload.pull_request.head.ref
   core.info(`Updating the head branch ${headRef}`)
-  await git.showGraph()
+  if (inputs.dryRun) {
+    core.info(`[dry-run] git push ${headRef}`)
+    return {}
+  }
   await git.push({ ref: `refs/heads/${headRef}`, token: inputs.token })
 
   if (context.payload.action === 'opened' || context.payload.action === 'synchronize') {

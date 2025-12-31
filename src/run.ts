@@ -14,6 +14,7 @@ export type Inputs = {
   draft: boolean
   reviewers: string[]
   labels: string[]
+  dryRun: boolean
   token: string
 }
 
