@@ -35,6 +35,7 @@ test('follow up by fast-forward', async () => {
       reviewers: ['myname', 'awesome/myteam'],
       labels: [],
       token: 'GITHUB_TOKEN',
+      dryRun: false,
     },
     {
       ref: 'refs/heads/main',
@@ -93,6 +94,7 @@ test('fallback to pull-request', async () => {
       reviewers: ['myname', 'awesome/myteam'],
       labels: ['mylabel'],
       token: 'GITHUB_TOKEN',
+      dryRun: false,
     },
     {
       ref: 'refs/heads/main',

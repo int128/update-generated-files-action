@@ -3,16 +3,17 @@ import type { PullRequestEvent } from '@octokit/webhooks-types'
 import { describe, expect, test, vi } from 'vitest'
 import * as git from '../src/git.js'
 import type { Context } from '../src/github.js'
-import { handlePullRequestEvent } from '../src/pull_request_event.js'
+import { handlePullRequestEvent, type Inputs } from '../src/pull_request_event.js'
 
 vi.mock('@actions/core')
 vi.mocked(core.info).mockImplementation(() => {})
 vi.mock('../src/git')
 
 describe('pull request event', () => {
-  const inputs = {
+  const inputs: Inputs = {
     commitMessage: 'Autofix (workflow / job)',
     commitMessageFooter: 'https://github.com/int128/update-generated-files-action/actions/runs/4309709120',
+    dryRun: false,
     token: 'GITHUB_TOKEN',
   }
   const context = {

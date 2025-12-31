@@ -155,6 +155,7 @@ If the last 5 commits were committed by this action, it exits with an error to p
 | `draft`                 | false                      | If true, create a draft pull request               |
 | `reviewers`             | (optional)                 | Request reviewers for the pull request (multiline) |
 | `labels`                | (optional)                 | Add labels to the pull request (multiline)         |
+| `dry-run`               | false                      | If true, do not push the changes                   |
 | `token`                 | `github.token`             | GitHub token                                       |
 
 ### Outputs
