@@ -34,6 +34,7 @@ test('follow up by fast-forward', async () => {
       draft: false,
       reviewers: ['myname', 'awesome/myteam'],
       labels: [],
+      dryRun: false,
     },
     {
       ref: 'refs/heads/main',
@@ -88,6 +89,7 @@ test('fallback to pull-request', async () => {
       draft: false,
       reviewers: ['myname', 'awesome/myteam'],
       labels: ['mylabel'],
+      dryRun: false,
     },
     {
       ref: 'refs/heads/main',
