@@ -16,7 +16,7 @@ export const handleOtherEvent = async (inputs: Inputs, context: Context, octokit
   // do not change the current HEAD from here
 
   core.info(`Trying to update ${context.ref} by fast-forward`)
-  if (await updateRefByFastForward(context)) {
+  if (await updateRefByFastForward(inputs, context)) {
     core.summary.addHeading(`GitHub Actions automatically updated the generated files in ${context.ref}`)
     await core.summary.write()
     if (context.eventName === 'push') {
@@ -45,7 +45,7 @@ export const handleOtherEvent = async (inputs: Inputs, context: Context, octokit
   }
 }
 
-const updateRefByFastForward = async (context: Context): Promise<boolean> => {
+const updateRefByFastForward = async (inputs: Inputs, context: Context): Promise<boolean> => {
   core.info(`Checking the last commits to prevent infinite loop`)
   await git.fetch({ refs: [context.sha], depth: LIMIT_REPEATED_COMMITS })
   const lastAuthorNames = await git.getAuthorNameOfCommits(context.sha, LIMIT_REPEATED_COMMITS)
