@@ -14,7 +14,6 @@ const main = async (): Promise<void> => {
       reviewers: core.getMultilineInput('reviewers'),
       labels: core.getMultilineInput('labels'),
       dryRun: core.getBooleanInput('dry-run'),
-      token: core.getInput('token', { required: true }),
     },
     await getContext(),
     getOctokit(),

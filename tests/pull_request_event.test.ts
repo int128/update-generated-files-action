@@ -14,7 +14,6 @@ describe('pull request event', () => {
     commitMessage: 'Autofix (workflow / job)',
     commitMessageFooter: 'https://github.com/int128/update-generated-files-action/actions/runs/4309709120',
     dryRun: false,
-    token: 'GITHUB_TOKEN',
   }
   const context = {
     sha: '0123456789abcdef-merge',
@@ -43,10 +42,11 @@ describe('pull request event', () => {
 
     expect(git.checkout).toHaveBeenCalledWith('0123456789abcdef-head')
     expect(git.merge).toHaveBeenCalledWith('0123456789abcdef-latest-base', `Merge branch 'main' into topic`)
-    expect(git.commit).toHaveBeenCalledWith(`Autofix (workflow / job)
-
-https://github.com/int128/update-generated-files-action/actions/runs/4309709120`)
+    expect(git.commit).toHaveBeenCalledWith(`Autofix (workflow / job)`, [
+      `https://github.com/int128/update-generated-files-action/actions/runs/4309709120`,
+    ])
     expect(git.push).toHaveBeenCalledTimes(1)
+    expect(git.push).toHaveBeenCalledWith({ localRef: `HEAD`, remoteRef: `refs/heads/topic`, dryRun: false })
   })
 
   test('checkout with head commit', async () => {
@@ -56,10 +56,11 @@ https://github.com/int128/update-generated-files-action/actions/runs/4309709120`
 
     expect(git.checkout).not.toHaveBeenCalled()
     expect(git.merge).not.toHaveBeenCalled()
-    expect(git.commit).toHaveBeenCalledWith(`Autofix (workflow / job)
-
-https://github.com/int128/update-generated-files-action/actions/runs/4309709120`)
+    expect(git.commit).toHaveBeenCalledWith(`Autofix (workflow / job)`, [
+      `https://github.com/int128/update-generated-files-action/actions/runs/4309709120`,
+    ])
     expect(git.push).toHaveBeenCalledTimes(1)
+    expect(git.push).toHaveBeenCalledWith({ localRef: `HEAD`, remoteRef: `refs/heads/topic`, dryRun: false })
   })
 
   test('last authors are this action', async () => {

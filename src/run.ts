@@ -15,7 +15,6 @@ export type Inputs = {
   reviewers: string[]
   labels: string[]
   dryRun: boolean
-  token: string
 }
 
 export type Outputs = {
@@ -31,8 +30,6 @@ export const run = async (inputs: Inputs, context: Context, octokit: Octokit): P
     core.info('Nothing to commit')
     return {}
   }
-
-  await git.configureAuthor()
 
   if (contextIsPullRequestEvent(context)) {
     return await handlePullRequestEvent(inputs, context)
