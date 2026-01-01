@@ -1,10 +1,10 @@
 import assert from 'node:assert'
 import * as core from '@actions/core'
+import type { Octokit } from '@octokit/action'
 import type { PullRequestEvent } from '@octokit/webhooks-types'
 import * as git from './git.js'
 import type { Context } from './github.js'
 import type { Outputs } from './run.js'
-import type { Octokit } from '@octokit/action'
 
 const LIMIT_REPEATED_COMMITS = 5
 

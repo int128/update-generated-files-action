@@ -1,10 +1,10 @@
 import * as core from '@actions/core'
+import type { Octokit } from '@octokit/action'
 import type { PullRequestEvent } from '@octokit/webhooks-types'
 import { describe, expect, test, vi } from 'vitest'
 import * as git from '../src/git.js'
 import type { Context } from '../src/github.js'
 import { handlePullRequestEvent, type Inputs } from '../src/pull_request_event.js'
-import { Octokit } from '@octokit/action'
 
 const octokitMock = {
   rest: {
