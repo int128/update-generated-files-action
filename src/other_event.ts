@@ -72,12 +72,12 @@ type PullRequest = {
 }
 
 const createPull = async (inputs: Inputs, context: Context, octokit: Octokit): Promise<PullRequest> => {
-  const head = inputs.headBranch.replaceAll(/[^\w]/g, '-')
-  core.info(`Creating a new branch ${head}`)
-  await git.push({ localRef: `HEAD`, remoteRef: `refs/heads/${head}`, dryRun: inputs.dryRun })
+  const headBranch = inputs.headBranch.replaceAll(/[^\w]/g, '-')
+  core.info(`Creating a new branch ${headBranch}`)
+  await git.push({ localRef: `HEAD`, remoteRef: `refs/heads/${headBranch}`, dryRun: inputs.dryRun })
 
-  const base = context.ref.replace(/^refs\/heads\//, '')
-  core.info(`Creating a pull request for ${base} branch`)
+  const baseBranch = context.ref.replace(/^refs\/heads\//, '')
+  core.info(`Creating a pull request for ${baseBranch} branch`)
   if (inputs.dryRun) {
     core.warning(`[dry-run] Created a pull request`)
     return {
@@ -87,86 +87,84 @@ const createPull = async (inputs: Inputs, context: Context, octokit: Octokit): P
   }
   const { data: pull } = await octokit.rest.pulls.create({
     ...context.repo,
-    base,
-    head,
+    base: baseBranch,
+    head: headBranch,
     title: inputs.title,
     body: `${inputs.body}\n\n----\n\n${inputs.commitMessage}\n${inputs.commitMessageFooter}`,
     draft: inputs.draft,
   })
   core.info(`Created ${pull.html_url}`)
 
-  if (inputs.reviewers.length > 0) {
-    const r = splitReviewers(inputs.reviewers)
-    core.info(`Requesting a review to ${JSON.stringify(r)}`)
-    const requestReviewers = await catchRequestError(() =>
-      octokit.rest.pulls.requestReviewers({
-        ...context.repo,
-        pull_number: pull.number,
-        reviewers: r.users,
-        team_reviewers: r.teams,
-      }),
-    )
-    if (requestReviewers instanceof Error) {
-      core.warning(`Could not request a review to ${JSON.stringify(r)}: ${String(requestReviewers)}`)
-      core.info(`Falling back to the actor @${context.actor}`)
-      const fallbackRequestReviewers = await catchRequestError(() =>
-        octokit.rest.pulls.requestReviewers({
-          ...context.repo,
-          pull_number: pull.number,
-          reviewers: [context.actor],
-        }),
-      )
-      if (fallbackRequestReviewers instanceof Error) {
-        core.warning(`Could not request a review to @${context.actor}: ${String(fallbackRequestReviewers)}`)
-      }
-    }
-  } else {
-    core.info(`Requesting a review to the actor @${context.actor}`)
-    const requestReviewers = await catchRequestError(() =>
-      octokit.rest.pulls.requestReviewers({
-        ...context.repo,
-        pull_number: pull.number,
-        reviewers: [context.actor],
-      }),
-    )
-    if (requestReviewers instanceof Error) {
-      core.info(`Could not request a review to @${context.actor}: ${String(requestReviewers)}`)
-    }
-
-    core.info(`Adding the actor @${context.actor} to assignees`)
-    const addAssignees = await catchRequestError(() =>
-      octokit.rest.issues.addAssignees({
-        ...context.repo,
-        issue_number: pull.number,
-        assignees: [context.actor],
-      }),
-    )
-    if (addAssignees instanceof Error) {
-      core.info(`Could not assign @${context.actor}: ${String(addAssignees)}`)
-    }
-  }
-
-  if (inputs.labels.length > 0) {
-    core.info(`Adding labels ${JSON.stringify(inputs.labels)}`)
-    const addLabels = await catchRequestError(() =>
-      octokit.rest.issues.addLabels({
-        ...context.repo,
-        issue_number: pull.number,
-        labels: inputs.labels,
-      }),
-    )
-    if (addLabels instanceof Error) {
-      core.warning(`Could not add labels to ${pull.number}: ${String(addLabels)}`)
-    }
-  }
-
+  await requestReviewers(inputs.reviewers, pull.number, context, octokit)
+  await addLabels(inputs.labels, pull.number, context, octokit)
   return pull
 }
 
-const splitReviewers = (reviewers: string[]) => ({
-  users: reviewers.filter((reviewer) => !reviewer.includes('/')),
-  teams: reviewers.filter((reviewer) => reviewer.includes('/')).map((reviewer) => reviewer.split('/')[1]),
-})
+const requestReviewers = async (reviewers: string[], pullNumber: number, context: Context, octokit: Octokit) => {
+  if (reviewers.length === 0) {
+    return await requestReviewToActor(pullNumber, context, octokit)
+  }
+  const users = reviewers.filter((reviewer) => !reviewer.includes('/'))
+  const teams = reviewers.filter((reviewer) => reviewer.includes('/')).map((reviewer) => reviewer.split('/')[1])
+  core.info(`Requesting a review to users (${users.join(', ')}) and teams (${teams.join(', ')})`)
+  const requestReviewersResponse = await catchRequestError(() =>
+    octokit.rest.pulls.requestReviewers({
+      ...context.repo,
+      pull_number: pullNumber,
+      reviewers: users,
+      team_reviewers: teams,
+    }),
+  )
+  if (requestReviewersResponse instanceof Error) {
+    core.warning(
+      `Could not request a review to users (${users.join(', ')}) and teams (${teams.join(', ')}): ${String(requestReviewersResponse)}`,
+    )
+    await requestReviewToActor(pullNumber, context, octokit)
+  }
+}
+
+const requestReviewToActor = async (pullNumber: number, context: Context, octokit: Octokit) => {
+  core.info(`Requesting a review to the actor @${context.actor}`)
+  const requestReviewersResponse = await catchRequestError(() =>
+    octokit.rest.pulls.requestReviewers({
+      ...context.repo,
+      pull_number: pullNumber,
+      reviewers: [context.actor],
+    }),
+  )
+  if (requestReviewersResponse instanceof Error) {
+    core.info(`Could not request a review to @${context.actor}: ${String(requestReviewersResponse)}`)
+  }
+
+  core.info(`Adding the actor @${context.actor} to assignees`)
+  const addAssigneesResponse = await catchRequestError(() =>
+    octokit.rest.issues.addAssignees({
+      ...context.repo,
+      issue_number: pullNumber,
+      assignees: [context.actor],
+    }),
+  )
+  if (addAssigneesResponse instanceof Error) {
+    core.info(`Could not assign @${context.actor}: ${String(addAssigneesResponse)}`)
+  }
+}
+
+const addLabels = async (labels: string[], pullNumber: number, context: Context, octokit: Octokit) => {
+  if (labels.length === 0) {
+    return
+  }
+  core.info(`Adding labels ${labels.join(', ')} to pull request #${pullNumber}`)
+  const addLabelsResponse = await catchRequestError(() =>
+    octokit.rest.issues.addLabels({
+      ...context.repo,
+      issue_number: pullNumber,
+      labels: labels,
+    }),
+  )
+  if (addLabelsResponse instanceof Error) {
+    core.warning(`Could not add labels to ${pullNumber}: ${String(addLabelsResponse)}`)
+  }
+}
 
 const catchRequestError = async <T>(f: () => Promise<T>): Promise<T | RequestError> => {
   try {
