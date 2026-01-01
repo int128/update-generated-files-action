@@ -103,21 +103,39 @@ type FetchInput = {
 }
 
 export const fetch = async (input: FetchInput) =>
-  await exec.exec('git', [...tokenArgs(), 'fetch', 'origin', `--depth=${input.depth}`, ...input.refs])
+  await exec.exec(
+    'git',
+    [
+      '--config-env=http.extraheader=CONFIG_GIT_HTTP_EXTRAHEADER',
+      'fetch',
+      'origin',
+      `--depth=${input.depth}`,
+      ...input.refs,
+    ],
+    {
+      env: {
+        ...process.env,
+        CONFIG_GIT_HTTP_EXTRAHEADER: authorizationHeader(),
+      },
+    },
+  )
 
-export const push = async (ref: string, options?: exec.ExecOptions) =>
-  await exec.exec('git', [...tokenArgs(), 'push', 'origin', `HEAD:${ref}`], options)
+export const push = async (localRef: string, remoteRef: string, options?: exec.ExecOptions) =>
+  await exec.exec(
+    'git',
+    ['--config-env=http.extraheader=CONFIG_GIT_HTTP_EXTRAHEADER', 'push', 'origin', `${localRef}:${remoteRef}`],
+    {
+      ...options,
+      env: {
+        ...process.env,
+        ...options?.env,
+        CONFIG_GIT_HTTP_EXTRAHEADER: authorizationHeader(),
+      },
+    },
+  )
 
-const tokenArgs = () => {
+const authorizationHeader = () => {
   const credentials = Buffer.from(`x-access-token:${core.getInput('token')}`).toString('base64')
   core.setSecret(credentials)
-  return [
-    // reset extraheader set by actions/checkout
-    // https://github.com/actions/checkout/issues/162#issuecomment-590821598
-    '-c',
-    `http.https://github.com/.extraheader=`,
-    // replace the token
-    '-c',
-    `http.https://github.com/.extraheader=AUTHORIZATION: basic ${credentials}`,
-  ]
+  return `AUTHORIZATION: basic ${credentials}`
 }
