@@ -20,7 +20,9 @@ export const getCurrentSHA = async (): Promise<string> => {
 }
 
 export const getParentSHAs = async (sha: string): Promise<string[]> => {
+  core.startGroup(`Getting the parent commits of ${sha}`)
   const { stdout } = await exec.getExecOutput('git', ['cat-file', 'commit', sha])
+  core.endGroup()
   return parseParentsOfGitCatFile(stdout)
 }
 
