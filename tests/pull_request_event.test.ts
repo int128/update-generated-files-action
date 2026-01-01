@@ -4,6 +4,35 @@ import { describe, expect, test, vi } from 'vitest'
 import * as git from '../src/git.js'
 import type { Context } from '../src/github.js'
 import { handlePullRequestEvent, type Inputs } from '../src/pull_request_event.js'
+import { Octokit } from '@octokit/action'
+
+const octokitMock = {
+  rest: {
+    repos: {
+      getBranch: vi.fn().mockResolvedValue({
+        data: {
+          commit: {
+            commit: {
+              message: 'Dummy',
+              tree: {
+                sha: 'dummy-tree-sha',
+              },
+            },
+            parents: [],
+          },
+        },
+      }),
+    },
+    git: {
+      createCommit: vi.fn().mockResolvedValue({
+        data: {
+          sha: 'dummy-commit-sha',
+        },
+      }),
+      updateRef: vi.fn(),
+    },
+  },
+}
 
 vi.mock('@actions/core')
 vi.mocked(core.info).mockImplementation(() => {})
@@ -17,6 +46,10 @@ describe('pull request event', () => {
   }
   const context = {
     sha: '0123456789abcdef-merge',
+    repo: {
+      owner: 'int128',
+      repo: 'update-generated-files-action',
+    },
     payload: {
       action: 'dummy',
       pull_request: {
@@ -38,21 +71,21 @@ describe('pull request event', () => {
     vi.mocked(git.canMerge).mockResolvedValueOnce(true)
     vi.mocked(git.getParentSHAs).mockResolvedValueOnce(['0123456789abcdef-latest-base', '0123456789abcdef-head'])
 
-    await handlePullRequestEvent(inputs, context as Context<PullRequestEvent>)
+    await handlePullRequestEvent(inputs, context as Context<PullRequestEvent>, octokitMock as unknown as Octokit)
 
     expect(git.checkout).toHaveBeenCalledWith('0123456789abcdef-head')
     expect(git.merge).toHaveBeenCalledWith('0123456789abcdef-latest-base', `Merge branch 'main' into topic`)
     expect(git.commit).toHaveBeenCalledWith(`Autofix (workflow / job)`, [
       `https://github.com/int128/update-generated-files-action/actions/runs/4309709120`,
     ])
-    expect(git.push).toHaveBeenCalledTimes(1)
+    expect(git.push).toHaveBeenCalledTimes(3)
     expect(git.push).toHaveBeenCalledWith({ localRef: `HEAD`, remoteRef: `refs/heads/topic`, dryRun: false })
   })
 
   test('checkout with head commit', async () => {
     vi.mocked(git.getAuthorNameOfCommits).mockResolvedValue(['renovate[bot]'])
     vi.mocked(git.getCurrentSHA).mockResolvedValue('0123456789abcdef-head')
-    await handlePullRequestEvent(inputs, context as Context<PullRequestEvent>)
+    await handlePullRequestEvent(inputs, context as Context<PullRequestEvent>, octokitMock as unknown as Octokit)
 
     expect(git.checkout).not.toHaveBeenCalled()
     expect(git.merge).not.toHaveBeenCalled()
@@ -71,6 +104,8 @@ describe('pull request event', () => {
       git.AUTHOR_NAME,
       git.AUTHOR_NAME,
     ])
-    await expect(handlePullRequestEvent(inputs, context as Context<PullRequestEvent>)).rejects.toThrow(/infinite loop/)
+    await expect(
+      handlePullRequestEvent(inputs, context as Context<PullRequestEvent>, octokitMock as unknown as Octokit),
+    ).rejects.toThrow(/infinite loop/)
   })
 })
