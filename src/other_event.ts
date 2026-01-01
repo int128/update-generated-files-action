@@ -19,6 +19,10 @@ export const handleOtherEvent = async (inputs: Inputs, context: Context, octokit
   if (await updateRefByFastForward(inputs, context)) {
     core.summary.addHeading(`GitHub Actions automatically updated the generated files in ${context.ref}`)
     await core.summary.write()
+    if (inputs.dryRun) {
+      core.warning(`[dry-run] GitHub Actions automatically updated the generated files in ${context.ref}`)
+      return {}
+    }
     if (context.eventName === 'push') {
       throw new Error(`GitHub Actions automatically updated the generated files in ${context.ref}`)
     }
