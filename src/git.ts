@@ -76,11 +76,12 @@ export const fetch = async (input: FetchInput) =>
 type PushInput = {
   ref: string
   token: string
+  dryRun: boolean
   ignoreReturnCode?: boolean
 }
 
 export const push = async (input: PushInput) =>
-  await execWithToken(input.token, ['push', 'origin', `HEAD:${input.ref}`], {
+  await execWithToken(input.token, ['push', 'origin', ...(input.dryRun ? ['--dry-run'] : []), `HEAD:${input.ref}`], {
     ignoreReturnCode: input.ignoreReturnCode,
   })
 

@@ -62,6 +62,7 @@ https://github.com/int128/update-generated-files-action/actions/runs/4309709120`
   expect(git.push).toHaveBeenCalledWith({
     ref: 'refs/heads/main',
     token: 'GITHUB_TOKEN',
+    dryRun: false,
     ignoreReturnCode: true,
   })
 })
@@ -125,11 +126,13 @@ https://github.com/int128/update-generated-files-action/actions/runs/4309709120`
   expect(git.push).toHaveBeenCalledWith({
     ref: 'refs/heads/main',
     token: 'GITHUB_TOKEN',
+    dryRun: false,
     ignoreReturnCode: true,
   })
   expect(git.push).toHaveBeenCalledWith({
     ref: 'refs/heads/update-generated-files--workflow--1--job--0',
     token: 'GITHUB_TOKEN',
+    dryRun: false,
   })
 
   expect(octokitMock.rest.pulls.create).toHaveBeenCalledWith({

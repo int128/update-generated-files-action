@@ -34,16 +34,16 @@ export const handlePullRequestEvent = async (inputs: Inputs, context: Context<Pu
 
   const headRef = context.payload.pull_request.head.ref
   core.info(`Updating the head branch ${headRef}`)
-  if (inputs.dryRun) {
-    core.warning(`[dry-run] git push ${headRef}`)
-    return {}
-  }
-  await git.push({ ref: `refs/heads/${headRef}`, token: inputs.token })
+  await git.push({ ref: `refs/heads/${headRef}`, token: inputs.token, dryRun: inputs.dryRun })
 
   if (context.payload.action === 'opened' || context.payload.action === 'synchronize') {
     // Fail if the head ref is outdated
     core.summary.addRaw(`Added a commit. CI should pass on the new commit.`)
     await core.summary.write()
+    if (inputs.dryRun) {
+      core.warning(`[dry-run] Added a commit. CI should pass on the new commit.`)
+      return {}
+    }
     throw new Error(`Added a commit. CI should pass on the new commit.`)
   }
   return {}
