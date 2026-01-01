@@ -72,6 +72,9 @@ const cherryPickWorkspaceChangesOntoMergeCommit = async (
   await fetchCommitsBetweenBaseHead(baseSHA, headSHA)
 
   await git.checkout(headSHA)
+
+
+
   // TODO: uncomment
   // if (await git.tryCherryPick(workspaceChangeSHA)) {
   //   await signCurrentCommit(context, octokit)
@@ -128,6 +131,7 @@ const signCurrentCommit = async (context: Context, octokit: Octokit) => {
     })
     await git.fetch({ refs: [signedCommit.sha], depth: 2 })
     await git.checkout(signedCommit.sha)
+    await git.showGraph()
   } finally {
     await git.deleteRef(`refs/heads/${signingBranch}`)
   }
