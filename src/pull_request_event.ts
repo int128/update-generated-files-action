@@ -28,12 +28,12 @@ export const handlePullRequestEvent = async (
     )
   }
 
-  // if (await currentCommitIsMergeCommit(context)) {
-  //   await cherryPickWorkspaceChangesOntoMergeCommit(inputs, context, octokit)
-  // } else {
+  if (await currentCommitIsMergeCommit(context)) {
+    await cherryPickWorkspaceChangesOntoMergeCommit(inputs, context, octokit)
+  } else {
     core.info(`Committing the workspace changes on the head branch directly`)
     await git.commit(inputs.commitMessage, [inputs.commitMessageFooter])
-  // }
+  }
   await git.showGraph()
 
   const headRef = context.payload.pull_request.head.ref
@@ -72,10 +72,11 @@ const cherryPickWorkspaceChangesOntoMergeCommit = async (
   await fetchCommitsBetweenBaseHead(baseSHA, headSHA)
 
   await git.checkout(headSHA)
-  if (await git.tryCherryPick(workspaceChangeSHA)) {
-    await signCurrentCommit(context, octokit)
-    return
-  }
+  // TODO: uncomment
+  // if (await git.tryCherryPick(workspaceChangeSHA)) {
+  //   await signCurrentCommit(context, octokit)
+  //   return
+  // }
 
   // If this action pushes the merge commit (refs/pull/x/merge) into the head branch,
   // we may see the unrelated diff in the pull request diff.
