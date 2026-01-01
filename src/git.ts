@@ -123,7 +123,13 @@ export const fetch = async (input: FetchInput) =>
     },
   )
 
-export const push = async (localRef: string, remoteRef: string, options?: exec.ExecOptions) =>
+type PushInput = {
+  localRef: string
+  remoteRef: string
+  dryRun: boolean
+}
+
+export const push = async (input: PushInput, options?: exec.ExecOptions) =>
   await exec.exec(
     'git',
     [
@@ -131,7 +137,8 @@ export const push = async (localRef: string, remoteRef: string, options?: exec.E
       'push',
       'origin',
       '--quiet',
-      `${localRef}:${remoteRef}`,
+      ...(input.dryRun ? ['--dry-run'] : []),
+      `${input.localRef}:${input.remoteRef}`,
     ],
     {
       ...options,

@@ -46,7 +46,7 @@ describe('pull request event', () => {
       `https://github.com/int128/update-generated-files-action/actions/runs/4309709120`,
     ])
     expect(git.push).toHaveBeenCalledTimes(1)
-    expect(git.push).toHaveBeenCalledWith('HEAD', 'refs/heads/topic')
+    expect(git.push).toHaveBeenCalledWith({ localRef: `HEAD`, remoteRef: `refs/heads/topic`, dryRun: false })
   })
 
   test('checkout with head commit', async () => {
@@ -60,7 +60,7 @@ describe('pull request event', () => {
       `https://github.com/int128/update-generated-files-action/actions/runs/4309709120`,
     ])
     expect(git.push).toHaveBeenCalledTimes(1)
-    expect(git.push).toHaveBeenCalledWith('HEAD', 'refs/heads/topic')
+    expect(git.push).toHaveBeenCalledWith({ localRef: `HEAD`, remoteRef: `refs/heads/topic`, dryRun: false })
   })
 
   test('last authors are this action', async () => {

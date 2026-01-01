@@ -26,10 +26,6 @@ export const handleOtherEvent = async (inputs: Inputs, context: Context, octokit
   }
 
   core.info(`Falling back to create a pull request to follow up`)
-  if (inputs.dryRun) {
-    core.warning(`[dry-run] Create a pull request for ${context.ref}`)
-    return {}
-  }
   const pull = await createPull(inputs, context, octokit)
   core.summary.addHeading(`Created a pull request: ${inputs.title}`)
   core.summary.addLink(pull.html_url, pull.html_url)
@@ -54,11 +50,10 @@ const updateRefByFastForward = async (inputs: Inputs, context: Context): Promise
     return false
   }
 
-  if (inputs.dryRun) {
-    core.warning(`[dry-run] git push ${context.ref}`)
-    return false
-  }
-  const code = await git.push(`HEAD`, context.ref, { ignoreReturnCode: true })
+  const code = await git.push(
+    { localRef: `HEAD`, remoteRef: context.ref, dryRun: inputs.dryRun },
+    { ignoreReturnCode: true },
+  )
   if (code !== 0) {
     core.info(`Failed to update ${context.ref} by fast-forward: git returned code ${code}`)
     return false
@@ -75,10 +70,17 @@ type PullRequest = {
 const createPull = async (inputs: Inputs, context: Context, octokit: Octokit): Promise<PullRequest> => {
   const head = inputs.headBranch.replaceAll(/[^\w]/g, '-')
   core.info(`Creating a new branch ${head}`)
-  await git.push(`HEAD`, `refs/heads/${head}`)
+  await git.push({ localRef: `HEAD`, remoteRef: `refs/heads/${head}`, dryRun: inputs.dryRun })
 
   const base = context.ref.replace(/^refs\/heads\//, '')
   core.info(`Creating a pull request for ${base} branch`)
+  if (inputs.dryRun) {
+    core.warning(`[dry-run] Created a pull request`)
+    return {
+      html_url: `https://example.com/${context.repo.owner}/${context.repo.repo}/pull/-1`,
+      number: -1,
+    }
+  }
   const { data: pull } = await octokit.rest.pulls.create({
     ...context.repo,
     base,
