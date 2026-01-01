@@ -35,10 +35,10 @@ export const parseParentsOfGitCatFile = (stdout: string): string[] => {
 export const showGraph = async () =>
   await exec.exec('git', ['log', '--max-count=10', '--graph', '--decorate', '--pretty=oneline', '--color=always'])
 
-export const checkout = async (sha: string) => await exec.exec('git', ['checkout', sha])
+export const checkout = async (sha: string) => await exec.exec('git', ['checkout', '--quiet', sha])
 
 export const merge = async (sha: string, message: string) =>
-  await exec.exec('git', ['merge', '--no-ff', '-m', message, sha], {
+  await exec.exec('git', ['merge', '--quiet', '--no-ff', '-m', message, sha], {
     env: {
       ...process.env,
       GIT_COMMITTER_NAME: AUTHOR_NAME,
@@ -109,6 +109,7 @@ export const fetch = async (input: FetchInput) =>
       '--config-env=http.extraheader=CONFIG_GIT_HTTP_EXTRAHEADER',
       'fetch',
       'origin',
+      '--quiet',
       `--depth=${input.depth}`,
       ...input.refs,
     ],
@@ -123,7 +124,13 @@ export const fetch = async (input: FetchInput) =>
 export const push = async (localRef: string, remoteRef: string, options?: exec.ExecOptions) =>
   await exec.exec(
     'git',
-    ['--config-env=http.extraheader=CONFIG_GIT_HTTP_EXTRAHEADER', 'push', 'origin', `${localRef}:${remoteRef}`],
+    [
+      '--config-env=http.extraheader=CONFIG_GIT_HTTP_EXTRAHEADER',
+      'push',
+      'origin',
+      '--quiet',
+      `${localRef}:${remoteRef}`,
+    ],
     {
       ...options,
       env: {
