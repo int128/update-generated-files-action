@@ -28,12 +28,12 @@ export const handlePullRequestEvent = async (
     )
   }
 
-  if (await currentCommitIsMergeCommit(context)) {
-    await cherryPickWorkspaceChangesOntoMergeCommit(inputs, context, octokit)
-  } else {
+  // if (await currentCommitIsMergeCommit(context)) {
+  //   await cherryPickWorkspaceChangesOntoMergeCommit(inputs, context, octokit)
+  // } else {
     core.info(`Committing the workspace changes on the head branch directly`)
     await git.commit(inputs.commitMessage, [inputs.commitMessageFooter])
-  }
+  // }
   await git.showGraph()
 
   const headRef = context.payload.pull_request.head.ref
