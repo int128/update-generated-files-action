@@ -150,6 +150,18 @@ export const push = async (input: PushInput, options?: exec.ExecOptions) =>
     },
   )
 
+export const deleteRef = async (ref: string) =>
+  await exec.exec(
+    'git',
+    ['--config-env=http.extraheader=CONFIG_GIT_HTTP_EXTRAHEADER', 'push', 'origin', '--quiet', '--delete', ref],
+    {
+      env: {
+        ...process.env,
+        CONFIG_GIT_HTTP_EXTRAHEADER: authorizationHeader(),
+      },
+    },
+  )
+
 const authorizationHeader = () => {
   const credentials = Buffer.from(`x-access-token:${core.getInput('token')}`).toString('base64')
   core.setSecret(credentials)

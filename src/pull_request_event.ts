@@ -4,6 +4,7 @@ import type { PullRequestEvent } from '@octokit/webhooks-types'
 import * as git from './git.js'
 import type { Context } from './github.js'
 import type { Outputs } from './run.js'
+import type { Octokit } from '@octokit/action'
 
 const LIMIT_REPEATED_COMMITS = 5
 
@@ -13,7 +14,11 @@ export type Inputs = {
   dryRun: boolean
 }
 
-export const handlePullRequestEvent = async (inputs: Inputs, context: Context<PullRequestEvent>): Promise<Outputs> => {
+export const handlePullRequestEvent = async (
+  inputs: Inputs,
+  context: Context<PullRequestEvent>,
+  octokit: Octokit,
+): Promise<Outputs> => {
   const headSHA = context.payload.pull_request.head.sha
   await git.fetch({ refs: [headSHA], depth: LIMIT_REPEATED_COMMITS })
   const lastAuthorNames = await git.getAuthorNameOfCommits(headSHA, LIMIT_REPEATED_COMMITS)
@@ -24,7 +29,7 @@ export const handlePullRequestEvent = async (inputs: Inputs, context: Context<Pu
   }
 
   if (await currentCommitIsMergeCommit(context)) {
-    await cherryPickWorkspaceChangesOntoMergeCommit(inputs, context)
+    await cherryPickWorkspaceChangesOntoMergeCommit(inputs, context, octokit)
   } else {
     core.info(`Committing the workspace changes on the head branch directly`)
     await git.commit(inputs.commitMessage, [inputs.commitMessageFooter])
@@ -51,7 +56,11 @@ export const handlePullRequestEvent = async (inputs: Inputs, context: Context<Pu
 const currentCommitIsMergeCommit = async (context: Context<PullRequestEvent>): Promise<boolean> =>
   (await git.getCurrentSHA()) === context.sha
 
-const cherryPickWorkspaceChangesOntoMergeCommit = async (inputs: Inputs, context: Context<PullRequestEvent>) => {
+const cherryPickWorkspaceChangesOntoMergeCommit = async (
+  inputs: Inputs,
+  context: Context<PullRequestEvent>,
+  octokit: Octokit,
+) => {
   core.info(`Cherry-pick the workspace changes onto the merge commit`)
   await git.commit(inputs.commitMessage, [inputs.commitMessageFooter])
   const workspaceChangeSHA = await git.getCurrentSHA()
@@ -64,6 +73,7 @@ const cherryPickWorkspaceChangesOntoMergeCommit = async (inputs: Inputs, context
 
   await git.checkout(headSHA)
   if (await git.tryCherryPick(workspaceChangeSHA)) {
+    await signCurrentCommit(context, octokit)
     return
   }
 
@@ -76,7 +86,9 @@ const cherryPickWorkspaceChangesOntoMergeCommit = async (inputs: Inputs, context
   const headRef = context.payload.pull_request.head.ref
   const baseRef = context.payload.pull_request.base.ref
   await git.merge(baseSHA, `Merge branch '${baseRef}' into ${headRef}`)
+  await signCurrentCommit(context, octokit)
   await git.cherryPick(workspaceChangeSHA)
+  await signCurrentCommit(context, octokit)
 }
 
 const fetchCommitsBetweenBaseHead = async (baseSHA: string, headSHA: string) => {
@@ -86,5 +98,36 @@ const fetchCommitsBetweenBaseHead = async (baseSHA: string, headSHA: string) => 
       return
     }
     await git.fetch({ refs: [baseSHA, headSHA], depth })
+  }
+}
+
+const signCurrentCommit = async (context: Context, octokit: Octokit) => {
+  const unsignedCommitSHA = await git.getCurrentSHA()
+  const signingBranch = `signing--${unsignedCommitSHA}`
+  await git.push({ localRef: unsignedCommitSHA, remoteRef: `refs/heads/${signingBranch}`, dryRun: false })
+  try {
+    const { data: unsigned } = await octokit.rest.repos.getBranch({
+      owner: context.repo.owner,
+      repo: context.repo.repo,
+      branch: signingBranch,
+    })
+    const { data: signedCommit } = await octokit.rest.git.createCommit({
+      owner: context.repo.owner,
+      repo: context.repo.repo,
+      message: unsigned.commit.commit.message,
+      tree: unsigned.commit.commit.tree.sha,
+      parents: unsigned.commit.parents.map((parent) => parent.sha),
+    })
+    await octokit.rest.git.updateRef({
+      owner: context.repo.owner,
+      repo: context.repo.repo,
+      ref: `heads/${signingBranch}`,
+      sha: signedCommit.sha,
+      force: true,
+    })
+    await git.fetch({ refs: [signedCommit.sha], depth: 1 })
+    await git.checkout(signedCommit.sha)
+  } finally {
+    await git.deleteRef(`refs/heads/${signingBranch}`)
   }
 }
