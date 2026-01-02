@@ -73,8 +73,6 @@ const cherryPickWorkspaceChangesOntoMergeCommit = async (
 
   await git.checkout(headSHA)
 
-
-
   // TODO: uncomment
   // if (await git.tryCherryPick(workspaceChangeSHA)) {
   //   await signCurrentCommit(context, octokit)
@@ -107,20 +105,21 @@ const fetchCommitsBetweenBaseHead = async (baseSHA: string, headSHA: string) => 
 
 const signCurrentCommit = async (context: Context, octokit: Octokit) => {
   const unsignedCommitSHA = await git.getCurrentSHA()
+  await git.showGraph()
   const signingBranch = `signing--${unsignedCommitSHA}`
   await git.push({ localRef: unsignedCommitSHA, remoteRef: `refs/heads/${signingBranch}`, dryRun: false })
   try {
-    const { data: unsigned } = await octokit.rest.repos.getBranch({
+    const { data: unsignedCommit } = await octokit.rest.git.getCommit({
       owner: context.repo.owner,
       repo: context.repo.repo,
-      branch: signingBranch,
+      commit_sha: unsignedCommitSHA,
     })
     const { data: signedCommit } = await octokit.rest.git.createCommit({
       owner: context.repo.owner,
       repo: context.repo.repo,
-      message: unsigned.commit.commit.message,
-      tree: unsigned.commit.commit.tree.sha,
-      parents: unsigned.commit.parents.map((parent) => parent.sha),
+      message: unsignedCommit.message,
+      tree: unsignedCommit.tree.sha,
+      parents: unsignedCommit.parents.map((parent) => parent.sha),
     })
     core.info(`Created a signed commit: ${JSON.stringify(signedCommit, null, 2)}`)
     await octokit.rest.git.updateRef({

@@ -8,22 +8,17 @@ import { handlePullRequestEvent, type Inputs } from '../src/pull_request_event.j
 
 const octokitMock = {
   rest: {
-    repos: {
-      getBranch: vi.fn().mockResolvedValue({
+    git: {
+      getCommit: vi.fn().mockResolvedValue({
         data: {
-          commit: {
-            commit: {
-              message: 'Dummy',
-              tree: {
-                sha: 'dummy-tree-sha',
-              },
-            },
-            parents: [],
+          sha: 'dummy-commit-sha',
+          message: 'Dummy commit message',
+          tree: {
+            sha: 'dummy-tree-sha',
           },
+          parents: [],
         },
       }),
-    },
-    git: {
       createCommit: vi.fn().mockResolvedValue({
         data: {
           sha: 'dummy-commit-sha',
