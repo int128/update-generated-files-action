@@ -109,6 +109,8 @@ export const fetch = async (input: FetchInput) =>
     'git',
     [
       '--config-env=http.extraheader=CONFIG_GIT_HTTP_EXTRAHEADER',
+      '-c',
+      'gc.auto=0',
       'fetch',
       'origin',
       '--quiet',
