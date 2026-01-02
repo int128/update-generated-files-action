@@ -113,7 +113,7 @@ export const fetch = async (input: FetchInput) =>
       'gc.auto=0',
       'fetch',
       'origin',
-      '--quiet',
+      // '--quiet',
       `--depth=${input.depth}`,
       ...input.refs,
     ],
