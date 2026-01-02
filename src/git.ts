@@ -134,6 +134,8 @@ export const push = async (input: PushInput, options?: exec.ExecOptions) =>
     'git',
     [
       '--config-env=http.extraheader=CONFIG_GIT_HTTP_EXTRAHEADER',
+      '-c',
+      'gc.auto=0',
       'push',
       'origin',
       '--quiet',
