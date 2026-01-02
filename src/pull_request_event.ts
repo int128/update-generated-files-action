@@ -134,7 +134,7 @@ const signCurrentCommit = async (context: Context, octokit: Octokit) => {
       force: true,
     })
     await git.showGraph()
-    await git.fetch({ refs: [signedCommit.sha], depth: 1 })
+    await git.fetch({ refs: [signedCommit.sha], depth: 3 })
     await git.showGraph()
     await git.checkout(signedCommit.sha)
     await git.showGraph()
