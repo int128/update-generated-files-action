@@ -126,7 +126,6 @@ const signCurrentCommit = async (context: Context, octokit: Octokit) => {
       tree: unsignedCommit.tree.sha,
       parents: unsignedCommit.parents.map((parent) => parent.sha),
     })
-    core.info(`Created a signed commit: ${JSON.stringify(signedCommit, null, 2)}`)
     await octokit.rest.git.updateRef({
       owner: context.repo.owner,
       repo: context.repo.repo,
@@ -134,6 +133,7 @@ const signCurrentCommit = async (context: Context, octokit: Octokit) => {
       sha: signedCommit.sha,
       force: true,
     })
+    await git.showGraph()
     await git.fetch({ refs: [signedCommit.sha], depth: 2 })
     await git.checkout(signedCommit.sha)
     await git.showGraph()
