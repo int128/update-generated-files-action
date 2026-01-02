@@ -88,7 +88,10 @@ const cherryPickWorkspaceChangesOntoMergeCommit = async (
   const headRef = context.payload.pull_request.head.ref
   const baseRef = context.payload.pull_request.base.ref
   await git.merge(baseSHA, `Merge branch '${baseRef}' into ${headRef}`)
-  await signCurrentCommit(context, octokit)
+  const mergeCommitIsCreated = (await git.getCurrentSHA()) !== headSHA
+  if (mergeCommitIsCreated) {
+    await signCurrentCommit(context, octokit)
+  }
   await git.cherryPick(workspaceChangeSHA)
   await signCurrentCommit(context, octokit)
 }
