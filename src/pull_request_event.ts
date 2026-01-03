@@ -125,10 +125,6 @@ const signCurrentCommit = async (context: Context, octokit: Octokit) => {
       message: unsignedCommit.message,
       tree: unsignedCommit.tree.sha,
       parents: unsignedCommit.parents.map((parent) => parent.sha),
-      author: {
-        name: 'update-generated-files-action',
-        email: 'actions@github.com',
-      },
     })
     await octokit.rest.git.updateRef({
       owner: context.repo.owner,
