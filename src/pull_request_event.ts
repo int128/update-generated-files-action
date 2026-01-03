@@ -125,7 +125,7 @@ const signCurrentCommit = async (context: Context, octokit: Octokit) => {
       message: unsignedCommit.message,
       tree: unsignedCommit.tree.sha,
       parents: unsignedCommit.parents.map((parent) => parent.sha),
-      committer: {
+      author: {
         name: 'update-generated-files-action',
         email: 'actions@github.com',
       },
