@@ -79,8 +79,6 @@ const cherryPickWorkspaceChangesOntoMergeCommit = async (
   //   return
   // }
 
-
-
   // If this action pushes the merge commit (refs/pull/x/merge) into the head branch,
   // we may see the unrelated diff in the pull request diff.
   // To avoid that issue, recreate a merge commit by base into head strategy.
