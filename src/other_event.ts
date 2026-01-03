@@ -1,18 +1,19 @@
 import * as core from '@actions/core'
 import type { Octokit } from '@octokit/action'
+import { failIfInfiniteLoop, GENERATED_BY_TRAILER } from './commit.js'
 import * as git from './git.js'
 import type { Context } from './github.js'
 import type { Inputs, Outputs } from './run.js'
 
-const LIMIT_REPEATED_COMMITS = 5
-
 export const handleOtherEvent = async (inputs: Inputs, context: Context, octokit: Octokit): Promise<Outputs> => {
+  await failIfInfiniteLoop(context.sha)
+
   if (!context.ref.startsWith('refs/heads/')) {
     core.warning('This action handles only branch event')
     return {}
   }
 
-  await git.commit([inputs.commitMessage, inputs.commitMessageFooter, `Generated-by: update-generated-files-action`])
+  await git.commit([inputs.commitMessage, inputs.commitMessageFooter, GENERATED_BY_TRAILER])
   // do not change the current HEAD from here
 
   core.info(`Trying to update ${context.ref} by fast-forward`)
@@ -46,14 +47,6 @@ export const handleOtherEvent = async (inputs: Inputs, context: Context, octokit
 }
 
 const updateRefByFastForward = async (inputs: Inputs, context: Context): Promise<boolean> => {
-  core.info(`Checking the last commits to prevent infinite loop`)
-  await git.fetch({ refs: [context.sha], depth: LIMIT_REPEATED_COMMITS })
-  const lastCommitMessages = await git.getCommitMessages(context.sha, LIMIT_REPEATED_COMMITS)
-  if (lastCommitMessages.every((message) => message.includes('Generated-by: update-generated-files-action'))) {
-    core.error(`This action has been called ${LIMIT_REPEATED_COMMITS} times. Do not push to prevent infinite loop`)
-    return false
-  }
-
   const code = await git.push(
     { localRef: `HEAD`, remoteRef: context.ref, dryRun: inputs.dryRun },
     { ignoreReturnCode: true },
