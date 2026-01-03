@@ -1,7 +1,7 @@
 import assert from 'node:assert'
 import * as core from '@actions/core'
 import type { PullRequestEvent } from '@octokit/webhooks-types'
-import { failIfInfiniteLoopDetected, GENERATED_BY_TRAILER } from './commit.js'
+import { detectRepeatedCommits, GENERATED_BY_TRAILER } from './commit.js'
 import * as git from './git.js'
 import type { Context } from './github.js'
 import type { Outputs } from './run.js'
@@ -13,7 +13,9 @@ export type Inputs = {
 }
 
 export const handlePullRequestEvent = async (inputs: Inputs, context: Context<PullRequestEvent>): Promise<Outputs> => {
-  await failIfInfiniteLoopDetected(context.payload.pull_request.head.sha)
+  if (await detectRepeatedCommits(context.payload.pull_request.head.sha)) {
+    throw new Error(`This action has been called too many times. Stop to prevent an infinite loop.`)
+  }
 
   const currentCommitIsMergeCommit = (await git.getCurrentSHA()) === context.sha
   if (currentCommitIsMergeCommit) {

@@ -1,16 +1,17 @@
 import * as core from '@actions/core'
 import type { Octokit } from '@octokit/action'
-import { failIfInfiniteLoopDetected, GENERATED_BY_TRAILER } from './commit.js'
+import { detectRepeatedCommits, GENERATED_BY_TRAILER } from './commit.js'
 import * as git from './git.js'
 import type { Context } from './github.js'
 import type { Inputs, Outputs } from './run.js'
 
 export const handleOtherEvent = async (inputs: Inputs, context: Context, octokit: Octokit): Promise<Outputs> => {
-  await failIfInfiniteLoopDetected(context.sha)
-
   if (!context.ref.startsWith('refs/heads/')) {
     core.warning('This action handles only branch event')
     return {}
+  }
+  if (await detectRepeatedCommits(context.sha)) {
+    throw new Error(`This action has been called too many times. Stop to prevent an infinite loop.`)
   }
 
   await git.commit([inputs.commitMessage, inputs.commitMessageFooter, GENERATED_BY_TRAILER])
