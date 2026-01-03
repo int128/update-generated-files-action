@@ -9,9 +9,9 @@ export const status = async (): Promise<string> => {
   return stdout.trim()
 }
 
-export const getAuthorNameOfCommits = async (ref: string, depth: number): Promise<string[]> => {
-  const { stdout } = await exec.getExecOutput('git', ['log', '--format=%an', `--max-count=${depth}`, ref])
-  return stdout.trim().split('\n')
+export const getCommitMessages = async (ref: string, depth: number): Promise<string[]> => {
+  const { stdout } = await exec.getExecOutput('git', ['log', '--pretty=%B%x00', `--max-count=${depth}`, ref])
+  return stdout.trim().split('\x00')
 }
 
 export const getCurrentSHA = async (): Promise<string> => {
@@ -39,8 +39,8 @@ export const showGraph = async () =>
 
 export const checkout = async (sha: string) => await exec.exec('git', ['checkout', '--quiet', sha])
 
-export const merge = async (sha: string, message: string) =>
-  await exec.exec('git', ['merge', '--quiet', '--no-ff', '-m', message, sha], {
+export const merge = async (sha: string, messages: [string, ...string[]]) =>
+  await exec.exec('git', ['merge', '--quiet', '--no-ff', ...messages.flatMap((message) => ['-m', message]), sha], {
     env: {
       ...process.env,
       GIT_COMMITTER_NAME: AUTHOR_NAME,
@@ -82,21 +82,17 @@ export const tryCherryPick = async (sha: string): Promise<boolean> => {
   return false
 }
 
-export const commit = async (message: string, additionalMessages: string[]) => {
+export const commit = async (messages: [string, ...string[]]) => {
   await exec.exec('git', ['add', '.'])
-  await exec.exec(
-    'git',
-    ['commit', '--quiet', '-m', message, ...additionalMessages.flatMap((message) => ['-m', message])],
-    {
-      env: {
-        ...process.env,
-        GIT_COMMITTER_NAME: AUTHOR_NAME,
-        GIT_COMMITTER_EMAIL: AUTHOR_EMAIL,
-        GIT_AUTHOR_NAME: AUTHOR_NAME,
-        GIT_AUTHOR_EMAIL: AUTHOR_EMAIL,
-      },
+  await exec.exec('git', ['commit', '--quiet', ...messages.flatMap((message) => ['-m', message])], {
+    env: {
+      ...process.env,
+      GIT_COMMITTER_NAME: AUTHOR_NAME,
+      GIT_COMMITTER_EMAIL: AUTHOR_EMAIL,
+      GIT_AUTHOR_NAME: AUTHOR_NAME,
+      GIT_AUTHOR_EMAIL: AUTHOR_EMAIL,
     },
-  )
+  })
 }
 
 type FetchInput = {

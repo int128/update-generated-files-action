@@ -12,7 +12,7 @@ export const handleOtherEvent = async (inputs: Inputs, context: Context, octokit
     return {}
   }
 
-  await git.commit(inputs.commitMessage, [inputs.commitMessageFooter])
+  await git.commit([inputs.commitMessage, inputs.commitMessageFooter, `Generated-by: update-generated-files-action`])
   // do not change the current HEAD from here
 
   core.info(`Trying to update ${context.ref} by fast-forward`)
@@ -48,9 +48,9 @@ export const handleOtherEvent = async (inputs: Inputs, context: Context, octokit
 const updateRefByFastForward = async (inputs: Inputs, context: Context): Promise<boolean> => {
   core.info(`Checking the last commits to prevent infinite loop`)
   await git.fetch({ refs: [context.sha], depth: LIMIT_REPEATED_COMMITS })
-  const lastAuthorNames = await git.getAuthorNameOfCommits(context.sha, LIMIT_REPEATED_COMMITS)
-  if (lastAuthorNames.every((authorName) => authorName === git.AUTHOR_NAME)) {
-    core.error(`This action has been called ${lastAuthorNames.length} times. Do not push to prevent infinite loop`)
+  const lastCommitMessages = await git.getCommitMessages(context.sha, LIMIT_REPEATED_COMMITS)
+  if (lastCommitMessages.every((message) => message.includes('Generated-by: update-generated-files-action'))) {
+    core.error(`This action has been called ${LIMIT_REPEATED_COMMITS} times. Do not push to prevent infinite loop`)
     return false
   }
 

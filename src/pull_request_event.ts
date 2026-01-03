@@ -14,20 +14,14 @@ export type Inputs = {
 }
 
 export const handlePullRequestEvent = async (inputs: Inputs, context: Context<PullRequestEvent>): Promise<Outputs> => {
-  const headSHA = context.payload.pull_request.head.sha
-  await git.fetch({ refs: [headSHA], depth: LIMIT_REPEATED_COMMITS })
-  const lastAuthorNames = await git.getAuthorNameOfCommits(headSHA, LIMIT_REPEATED_COMMITS)
-  if (lastAuthorNames.every((authorName) => authorName === git.AUTHOR_NAME)) {
-    throw new Error(
-      `This action has been called ${LIMIT_REPEATED_COMMITS} times. Stop the job to prevent infinite loop.`,
-    )
-  }
+  await checkForInfiniteLoop(context)
 
-  if (await currentCommitIsMergeCommit(context)) {
+  const currentCommitIsMergeCommit = (await git.getCurrentSHA()) === context.sha
+  if (currentCommitIsMergeCommit) {
     await cherryPickWorkspaceChangesOntoMergeCommit(inputs, context)
   } else {
     core.info(`Committing the workspace changes on the head branch directly`)
-    await git.commit(inputs.commitMessage, [inputs.commitMessageFooter])
+    await git.commit([inputs.commitMessage, inputs.commitMessageFooter, `Generated-by: update-generated-files-action`])
   }
   await git.showGraph()
 
@@ -48,12 +42,21 @@ export const handlePullRequestEvent = async (inputs: Inputs, context: Context<Pu
   return {}
 }
 
-const currentCommitIsMergeCommit = async (context: Context<PullRequestEvent>): Promise<boolean> =>
-  (await git.getCurrentSHA()) === context.sha
+const checkForInfiniteLoop = async (context: Context<PullRequestEvent>) => {
+  core.info(`Checking the last commits to prevent infinite loop`)
+  const headSHA = context.payload.pull_request.head.sha
+  await git.fetch({ refs: [headSHA], depth: LIMIT_REPEATED_COMMITS })
+  const lastCommitMessages = await git.getCommitMessages(headSHA, LIMIT_REPEATED_COMMITS)
+  if (lastCommitMessages.every((message) => message.includes('Generated-by: update-generated-files-action'))) {
+    throw new Error(
+      `This action has been called ${LIMIT_REPEATED_COMMITS} times. Stop the job to prevent infinite loop.`,
+    )
+  }
+}
 
 const cherryPickWorkspaceChangesOntoMergeCommit = async (inputs: Inputs, context: Context<PullRequestEvent>) => {
   core.info(`Cherry-pick the workspace changes onto the merge commit`)
-  await git.commit(inputs.commitMessage, [inputs.commitMessageFooter])
+  await git.commit([inputs.commitMessage, inputs.commitMessageFooter, `Generated-by: update-generated-files-action`])
   const workspaceChangeSHA = await git.getCurrentSHA()
 
   const parentSHAs = await git.getParentSHAs(context.sha)
@@ -75,7 +78,7 @@ const cherryPickWorkspaceChangesOntoMergeCommit = async (inputs: Inputs, context
   await git.checkout(headSHA)
   const headRef = context.payload.pull_request.head.ref
   const baseRef = context.payload.pull_request.base.ref
-  await git.merge(baseSHA, `Merge branch '${baseRef}' into ${headRef}`)
+  await git.merge(baseSHA, [`Merge branch '${baseRef}' into ${headRef}`, `Generated-by: update-generated-files-action`])
   await git.cherryPick(workspaceChangeSHA)
 }
 

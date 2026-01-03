@@ -32,7 +32,7 @@ describe('pull request event', () => {
   }
 
   test('checkout with merge commit', async () => {
-    vi.mocked(git.getAuthorNameOfCommits).mockResolvedValue(['renovate[bot]'])
+    vi.mocked(git.getCommitMessages).mockResolvedValue(['Commit message'])
     vi.mocked(git.getCurrentSHA).mockResolvedValue('0123456789abcdef-merge')
     vi.mocked(git.canMerge).mockResolvedValueOnce(false)
     vi.mocked(git.canMerge).mockResolvedValueOnce(true)
@@ -41,35 +41,42 @@ describe('pull request event', () => {
     await handlePullRequestEvent(inputs, context as Context<PullRequestEvent>)
 
     expect(git.checkout).toHaveBeenCalledWith('0123456789abcdef-head')
-    expect(git.merge).toHaveBeenCalledWith('0123456789abcdef-latest-base', `Merge branch 'main' into topic`)
-    expect(git.commit).toHaveBeenCalledWith(`Autofix (workflow / job)`, [
+    expect(git.merge).toHaveBeenCalledWith('0123456789abcdef-latest-base', [
+      `Merge branch 'main' into topic`,
+      `Generated-by: update-generated-files-action`,
+    ])
+    expect(git.commit).toHaveBeenCalledWith([
+      `Autofix (workflow / job)`,
       `https://github.com/int128/update-generated-files-action/actions/runs/4309709120`,
+      `Generated-by: update-generated-files-action`,
     ])
     expect(git.push).toHaveBeenCalledTimes(1)
     expect(git.push).toHaveBeenCalledWith({ localRef: `HEAD`, remoteRef: `refs/heads/topic`, dryRun: false })
   })
 
   test('checkout with head commit', async () => {
-    vi.mocked(git.getAuthorNameOfCommits).mockResolvedValue(['renovate[bot]'])
+    vi.mocked(git.getCommitMessages).mockResolvedValue(['Commit message'])
     vi.mocked(git.getCurrentSHA).mockResolvedValue('0123456789abcdef-head')
     await handlePullRequestEvent(inputs, context as Context<PullRequestEvent>)
 
     expect(git.checkout).not.toHaveBeenCalled()
     expect(git.merge).not.toHaveBeenCalled()
-    expect(git.commit).toHaveBeenCalledWith(`Autofix (workflow / job)`, [
+    expect(git.commit).toHaveBeenCalledWith([
+      `Autofix (workflow / job)`,
       `https://github.com/int128/update-generated-files-action/actions/runs/4309709120`,
+      `Generated-by: update-generated-files-action`,
     ])
     expect(git.push).toHaveBeenCalledTimes(1)
     expect(git.push).toHaveBeenCalledWith({ localRef: `HEAD`, remoteRef: `refs/heads/topic`, dryRun: false })
   })
 
   test('last authors are this action', async () => {
-    vi.mocked(git.getAuthorNameOfCommits).mockResolvedValue([
-      git.AUTHOR_NAME,
-      git.AUTHOR_NAME,
-      git.AUTHOR_NAME,
-      git.AUTHOR_NAME,
-      git.AUTHOR_NAME,
+    vi.mocked(git.getCommitMessages).mockResolvedValue([
+      'Generated-by: update-generated-files-action',
+      'Generated-by: update-generated-files-action',
+      'Generated-by: update-generated-files-action',
+      'Generated-by: update-generated-files-action',
+      'Generated-by: update-generated-files-action',
     ])
     await expect(handlePullRequestEvent(inputs, context as Context<PullRequestEvent>)).rejects.toThrow(/infinite loop/)
   })
