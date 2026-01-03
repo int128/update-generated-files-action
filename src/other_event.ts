@@ -1,12 +1,12 @@
 import * as core from '@actions/core'
 import type { Octokit } from '@octokit/action'
-import { failIfInfiniteLoop, GENERATED_BY_TRAILER } from './commit.js'
+import { failIfInfiniteLoopDetected, GENERATED_BY_TRAILER } from './commit.js'
 import * as git from './git.js'
 import type { Context } from './github.js'
 import type { Inputs, Outputs } from './run.js'
 
 export const handleOtherEvent = async (inputs: Inputs, context: Context, octokit: Octokit): Promise<Outputs> => {
-  await failIfInfiniteLoop(context.sha)
+  await failIfInfiniteLoopDetected(context.sha)
 
   if (!context.ref.startsWith('refs/heads/')) {
     core.warning('This action handles only branch event')
