@@ -1,5 +1,6 @@
 import assert from 'node:assert'
 import * as core from '@actions/core'
+import type { Octokit } from '@octokit/action'
 import type { PullRequestEvent } from '@octokit/webhooks-types'
 import * as git from './git.js'
 import type { Context } from './github.js'
@@ -13,7 +14,11 @@ export type Inputs = {
   dryRun: boolean
 }
 
-export const handlePullRequestEvent = async (inputs: Inputs, context: Context<PullRequestEvent>): Promise<Outputs> => {
+export const handlePullRequestEvent = async (
+  inputs: Inputs,
+  context: Context<PullRequestEvent>,
+  octokit: Octokit,
+): Promise<Outputs> => {
   const headSHA = context.payload.pull_request.head.sha
   await git.fetch({ refs: [headSHA], depth: LIMIT_REPEATED_COMMITS })
   const lastAuthorNames = await git.getAuthorNameOfCommits(headSHA, LIMIT_REPEATED_COMMITS)
@@ -24,7 +29,7 @@ export const handlePullRequestEvent = async (inputs: Inputs, context: Context<Pu
   }
 
   if (await currentCommitIsMergeCommit(context)) {
-    await cherryPickWorkspaceChangesOntoMergeCommit(inputs, context)
+    await cherryPickWorkspaceChangesOntoMergeCommit(inputs, context, octokit)
   } else {
     core.info(`Committing the workspace changes on the head branch directly`)
     await git.commit(inputs.commitMessage, [inputs.commitMessageFooter])
@@ -51,9 +56,13 @@ export const handlePullRequestEvent = async (inputs: Inputs, context: Context<Pu
 const currentCommitIsMergeCommit = async (context: Context<PullRequestEvent>): Promise<boolean> =>
   (await git.getCurrentSHA()) === context.sha
 
-const cherryPickWorkspaceChangesOntoMergeCommit = async (inputs: Inputs, context: Context<PullRequestEvent>) => {
+const cherryPickWorkspaceChangesOntoMergeCommit = async (
+  inputs: Inputs,
+  context: Context<PullRequestEvent>,
+  octokit: Octokit,
+) => {
   core.info(`Cherry-pick the workspace changes onto the merge commit`)
-  await git.commit(inputs.commitMessage, [inputs.commitMessageFooter])
+  await git.commit(inputs.commitMessage, [inputs.commitMessageFooter, 'Generated-by: update-generated-files-action'])
   const workspaceChangeSHA = await git.getCurrentSHA()
 
   const parentSHAs = await git.getParentSHAs(context.sha)
@@ -63,9 +72,12 @@ const cherryPickWorkspaceChangesOntoMergeCommit = async (inputs: Inputs, context
   await fetchCommitsBetweenBaseHead(baseSHA, headSHA)
 
   await git.checkout(headSHA)
-  if (await git.tryCherryPick(workspaceChangeSHA)) {
-    return
-  }
+
+  // TODO: uncomment
+  // if (await git.tryCherryPick(workspaceChangeSHA)) {
+  //   await signCurrentCommit(context, octokit)
+  //   return
+  // }
 
   // If this action pushes the merge commit (refs/pull/x/merge) into the head branch,
   // we may see the unrelated diff in the pull request diff.
@@ -75,8 +87,13 @@ const cherryPickWorkspaceChangesOntoMergeCommit = async (inputs: Inputs, context
   await git.checkout(headSHA)
   const headRef = context.payload.pull_request.head.ref
   const baseRef = context.payload.pull_request.base.ref
-  await git.merge(baseSHA, `Merge branch '${baseRef}' into ${headRef}`)
+  await git.merge(baseSHA, `Merge branch '${baseRef}' into ${headRef}`, ['Generated-by: update-generated-files-action'])
+  const mergeCommitIsCreated = (await git.getCurrentSHA()) !== headSHA
+  if (mergeCommitIsCreated) {
+    await signCurrentCommit(context, octokit)
+  }
   await git.cherryPick(workspaceChangeSHA)
+  await signCurrentCommit(context, octokit)
 }
 
 const fetchCommitsBetweenBaseHead = async (baseSHA: string, headSHA: string) => {
@@ -86,5 +103,40 @@ const fetchCommitsBetweenBaseHead = async (baseSHA: string, headSHA: string) => 
       return
     }
     await git.fetch({ refs: [baseSHA, headSHA], depth })
+  }
+}
+
+const signCurrentCommit = async (context: Context, octokit: Octokit) => {
+  const unsignedCommitSHA = await git.getCurrentSHA()
+  await git.showGraph()
+  const signingBranch = `signing--${unsignedCommitSHA}`
+  await git.push({ localRef: unsignedCommitSHA, remoteRef: `refs/heads/${signingBranch}`, dryRun: false })
+  try {
+    const { data: unsignedCommit } = await octokit.rest.git.getCommit({
+      owner: context.repo.owner,
+      repo: context.repo.repo,
+      commit_sha: unsignedCommitSHA,
+    })
+    const { data: signedCommit } = await octokit.rest.git.createCommit({
+      owner: context.repo.owner,
+      repo: context.repo.repo,
+      message: unsignedCommit.message,
+      tree: unsignedCommit.tree.sha,
+      parents: unsignedCommit.parents.map((parent) => parent.sha),
+    })
+    await octokit.rest.git.updateRef({
+      owner: context.repo.owner,
+      repo: context.repo.repo,
+      ref: `heads/${signingBranch}`,
+      sha: signedCommit.sha,
+      force: true,
+    })
+    await git.showGraph()
+    await git.fetch({ refs: [signedCommit.sha], depth: 1 })
+    await git.showGraph()
+    await git.checkout(signedCommit.sha)
+    await git.showGraph()
+  } finally {
+    await git.deleteRef(`refs/heads/${signingBranch}`)
   }
 }

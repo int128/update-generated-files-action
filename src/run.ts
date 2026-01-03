@@ -32,7 +32,7 @@ export const run = async (inputs: Inputs, context: Context, octokit: Octokit): P
   }
 
   if (contextIsPullRequestEvent(context)) {
-    return await handlePullRequestEvent(inputs, context)
+    return await handlePullRequestEvent(inputs, context, octokit)
   }
 
   return await handleOtherEvent(inputs, context, octokit)
