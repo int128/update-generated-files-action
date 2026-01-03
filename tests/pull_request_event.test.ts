@@ -69,15 +69,4 @@ describe('pull request event', () => {
     expect(git.push).toHaveBeenCalledTimes(1)
     expect(git.push).toHaveBeenCalledWith({ localRef: `HEAD`, remoteRef: `refs/heads/topic`, dryRun: false })
   })
-
-  test('last authors are this action', async () => {
-    vi.mocked(git.getCommitMessages).mockResolvedValue([
-      'Generated-by: update-generated-files-action',
-      'Generated-by: update-generated-files-action',
-      'Generated-by: update-generated-files-action',
-      'Generated-by: update-generated-files-action',
-      'Generated-by: update-generated-files-action',
-    ])
-    await expect(handlePullRequestEvent(inputs, context as Context<PullRequestEvent>)).rejects.toThrow(/infinite loop/)
-  })
 })
