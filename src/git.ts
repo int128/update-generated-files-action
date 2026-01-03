@@ -11,7 +11,10 @@ export const status = async (): Promise<string> => {
 
 export const getCommitMessages = async (ref: string, depth: number): Promise<string[]> => {
   const { stdout } = await exec.getExecOutput('git', ['log', '--pretty=%B%x00', `--max-count=${depth}`, ref])
-  return stdout.trim().split('\x00')
+  return stdout
+    .split('\x00')
+    .map((message) => message.trim())
+    .filter((message) => message.length > 0)
 }
 
 export const getCurrentSHA = async (): Promise<string> => {
