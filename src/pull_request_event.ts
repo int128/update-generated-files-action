@@ -47,11 +47,8 @@ const checkForInfiniteLoop = async (context: Context<PullRequestEvent>) => {
   const headSHA = context.payload.pull_request.head.sha
   await git.fetch({ refs: [headSHA], depth: LIMIT_REPEATED_COMMITS })
   const lastCommitMessages = await git.getCommitMessages(headSHA, LIMIT_REPEATED_COMMITS)
-  core.info(`Last commit messages: ${JSON.stringify(lastCommitMessages)}`) // TODO
   if (lastCommitMessages.every((message) => message.includes('Generated-by: update-generated-files-action'))) {
-    throw new Error(
-      `This action has been called ${LIMIT_REPEATED_COMMITS} times. Stop the job to prevent infinite loop.`,
-    )
+    throw new Error(`This action has been called ${LIMIT_REPEATED_COMMITS} times. Stop to prevent infinite loop.`)
   }
 }
 
