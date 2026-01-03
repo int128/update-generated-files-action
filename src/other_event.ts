@@ -17,6 +17,8 @@ export const handleOtherEvent = async (inputs: Inputs, context: Context, octokit
   await git.commit([inputs.commitMessage, inputs.commitMessageFooter, GENERATED_BY_TRAILER])
   // do not change the current HEAD from here
 
+
+
   core.info(`Trying to update ${context.ref} by fast-forward`)
   if (await updateRefByFastForward(inputs, context)) {
     core.summary.addHeading(`GitHub Actions automatically updated the generated files in ${context.ref}`)
