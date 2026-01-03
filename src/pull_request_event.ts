@@ -62,7 +62,7 @@ const cherryPickWorkspaceChangesOntoMergeCommit = async (
   octokit: Octokit,
 ) => {
   core.info(`Cherry-pick the workspace changes onto the merge commit`)
-  await git.commit(inputs.commitMessage, [inputs.commitMessageFooter])
+  await git.commit(inputs.commitMessage, [inputs.commitMessageFooter, 'Generated-by: update-generated-files-action'])
   const workspaceChangeSHA = await git.getCurrentSHA()
 
   const parentSHAs = await git.getParentSHAs(context.sha)
@@ -89,7 +89,7 @@ const cherryPickWorkspaceChangesOntoMergeCommit = async (
   await git.checkout(headSHA)
   const headRef = context.payload.pull_request.head.ref
   const baseRef = context.payload.pull_request.base.ref
-  await git.merge(baseSHA, `Merge branch '${baseRef}' into ${headRef}`)
+  await git.merge(baseSHA, `Merge branch '${baseRef}' into ${headRef}`, ['Generated-by: update-generated-files-action'])
   const mergeCommitIsCreated = (await git.getCurrentSHA()) !== headSHA
   if (mergeCommitIsCreated) {
     await signCurrentCommit(context, octokit)

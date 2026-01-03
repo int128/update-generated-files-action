@@ -39,16 +39,20 @@ export const showGraph = async () =>
 
 export const checkout = async (sha: string) => await exec.exec('git', ['checkout', '--quiet', sha])
 
-export const merge = async (sha: string, message: string) =>
-  await exec.exec('git', ['merge', '--quiet', '--no-ff', '-m', message, sha], {
-    env: {
-      ...process.env,
-      GIT_COMMITTER_NAME: AUTHOR_NAME,
-      GIT_COMMITTER_EMAIL: AUTHOR_EMAIL,
-      GIT_AUTHOR_NAME: AUTHOR_NAME,
-      GIT_AUTHOR_EMAIL: AUTHOR_EMAIL,
+export const merge = async (sha: string, message: string, additionalMessages: string[]) =>
+  await exec.exec(
+    'git',
+    ['merge', '--quiet', '--no-ff', '-m', message, ...additionalMessages.flatMap((message) => ['-m', message]), sha],
+    {
+      env: {
+        ...process.env,
+        GIT_COMMITTER_NAME: AUTHOR_NAME,
+        GIT_COMMITTER_EMAIL: AUTHOR_EMAIL,
+        GIT_AUTHOR_NAME: AUTHOR_NAME,
+        GIT_AUTHOR_EMAIL: AUTHOR_EMAIL,
+      },
     },
-  })
+  )
 
 export const canMerge = async (base: string, head: string): Promise<boolean> =>
   (await exec.exec('git', ['merge-base', base, head], { ignoreReturnCode: true })) === 0
