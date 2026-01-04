@@ -142,7 +142,7 @@ You can update both dependencies and generated files as follows:
 
 ## Specification
 
-If the last 5 commits were committed by this action, it exits with an error to prevent the infinite loop.
+If the last 5 commits were committed by this action, it stops with an error to prevent an infinite loop.
 
 ### Inputs
 
