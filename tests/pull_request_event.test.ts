@@ -1,5 +1,5 @@
 import * as core from '@actions/core'
-import type { PullRequestEvent } from '@octokit/webhooks-types'
+import type { PullRequestEvent, WebhookEvent } from '@octokit/webhooks-types'
 import { describe, expect, test, vi } from 'vitest'
 import * as git from '../src/git.js'
 import type { Context } from '../src/github.js'
@@ -12,11 +12,20 @@ vi.mock('../src/git')
 describe('pull request event', () => {
   const inputs: Inputs = {
     commitMessage: 'Autofix (workflow / job)',
-    commitMessageFooter: 'https://github.com/int128/update-generated-files-action/actions/runs/4309709120',
+    commitMessageFooter: '',
     dryRun: false,
   }
-  const context = {
+  const context: Context<PullRequestEvent> = {
+    ref: 'refs/pull/1/merge',
+    actor: 'octocat',
+    eventName: 'pull_request',
     sha: '0123456789abcdef-merge',
+    repo: {
+      owner: 'int128',
+      repo: 'update-generated-files-action',
+    },
+    runId: 1234567890,
+    serverUrl: 'https://github.com',
     payload: {
       action: 'dummy',
       pull_request: {
@@ -28,7 +37,7 @@ describe('pull request event', () => {
           sha: '0123456789abcdef-head',
         },
       },
-    },
+    } as WebhookEvent as PullRequestEvent,
   }
 
   test('checkout with merge commit', async () => {
@@ -38,17 +47,16 @@ describe('pull request event', () => {
     vi.mocked(git.canMerge).mockResolvedValueOnce(true)
     vi.mocked(git.getParentSHAs).mockResolvedValueOnce(['0123456789abcdef-latest-base', '0123456789abcdef-head'])
 
-    await handlePullRequestEvent(inputs, context as Context<PullRequestEvent>)
+    await handlePullRequestEvent(inputs, context)
 
     expect(git.checkout).toHaveBeenCalledWith('0123456789abcdef-head')
     expect(git.merge).toHaveBeenCalledWith('0123456789abcdef-latest-base', [
       `Merge branch 'main' into topic`,
-      `Generated-by: update-generated-files-action`,
+      `Auto-generated-by: update-generated-files-action; https://github.com/int128/update-generated-files-action/actions/runs/1234567890`,
     ])
     expect(git.commit).toHaveBeenCalledWith([
       `Autofix (workflow / job)`,
-      `https://github.com/int128/update-generated-files-action/actions/runs/4309709120`,
-      `Generated-by: update-generated-files-action`,
+      `Auto-generated-by: update-generated-files-action; https://github.com/int128/update-generated-files-action/actions/runs/1234567890`,
     ])
     expect(git.push).toHaveBeenCalledTimes(1)
     expect(git.push).toHaveBeenCalledWith({ localRef: `HEAD`, remoteRef: `refs/heads/topic`, dryRun: false })
@@ -63,8 +71,7 @@ describe('pull request event', () => {
     expect(git.merge).not.toHaveBeenCalled()
     expect(git.commit).toHaveBeenCalledWith([
       `Autofix (workflow / job)`,
-      `https://github.com/int128/update-generated-files-action/actions/runs/4309709120`,
-      `Generated-by: update-generated-files-action`,
+      `Auto-generated-by: update-generated-files-action; https://github.com/int128/update-generated-files-action/actions/runs/1234567890`,
     ])
     expect(git.push).toHaveBeenCalledTimes(1)
     expect(git.push).toHaveBeenCalledWith({ localRef: `HEAD`, remoteRef: `refs/heads/topic`, dryRun: false })
