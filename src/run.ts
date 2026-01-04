@@ -30,10 +30,8 @@ export const run = async (inputs: Inputs, context: Context, octokit: Octokit): P
     core.info('Nothing to commit')
     return {}
   }
-
   if (contextIsPullRequestEvent(context)) {
     return await handlePullRequestEvent(inputs, context)
   }
-
   return await handleOtherEvent(inputs, context, octokit)
 }
