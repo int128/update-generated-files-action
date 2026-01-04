@@ -142,21 +142,20 @@ You can update both dependencies and generated files as follows:
 
 ## Specification
 
-If the last 5 commits were committed by this action, it exits with an error to prevent the infinite loop.
+If the last 5 commits were committed by this action, it stops with an error to prevent an infinite loop.
 
 ### Inputs
 
-| Name                    | Default                    | Description                                        |
-| ----------------------- | -------------------------- | -------------------------------------------------- |
-| `commit-message`        | [action.yaml](action.yaml) | Commit message                                     |
-| `commit-message-footer` | [action.yaml](action.yaml) | Footer of commit message                           |
-| `title`                 | [action.yaml](action.yaml) | Title of the pull request                          |
-| `body`                  | [action.yaml](action.yaml) | Body of the pull request                           |
-| `draft`                 | false                      | If true, create a draft pull request               |
-| `reviewers`             | (optional)                 | Request reviewers for the pull request (multiline) |
-| `labels`                | (optional)                 | Add labels to the pull request (multiline)         |
-| `dry-run`               | false                      | If true, do not push the changes                   |
-| `token`                 | `github.token`             | GitHub token                                       |
+| Name             | Default                    | Description                                        |
+| ---------------- | -------------------------- | -------------------------------------------------- |
+| `commit-message` | [action.yaml](action.yaml) | Commit message                                     |
+| `title`          | [action.yaml](action.yaml) | Title of the pull request                          |
+| `body`           | [action.yaml](action.yaml) | Body of the pull request                           |
+| `draft`          | false                      | If true, create a draft pull request               |
+| `reviewers`      | (optional)                 | Request reviewers for the pull request (multiline) |
+| `labels`         | (optional)                 | Add labels to the pull request (multiline)         |
+| `dry-run`        | false                      | If true, do not push the changes                   |
+| `token`          | `github.token`             | GitHub token                                       |
 
 ### Outputs
 
