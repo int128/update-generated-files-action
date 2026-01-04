@@ -56,6 +56,7 @@ describe('pull request event', () => {
     ])
     expect(git.commit).toHaveBeenCalledWith([
       `Autofix (workflow / job)`,
+      ``,
       `Auto-generated-by: update-generated-files-action; https://github.com/int128/update-generated-files-action/actions/runs/1234567890`,
     ])
     expect(git.push).toHaveBeenCalledTimes(1)
@@ -71,6 +72,7 @@ describe('pull request event', () => {
     expect(git.merge).not.toHaveBeenCalled()
     expect(git.commit).toHaveBeenCalledWith([
       `Autofix (workflow / job)`,
+      ``,
       `Auto-generated-by: update-generated-files-action; https://github.com/int128/update-generated-files-action/actions/runs/1234567890`,
     ])
     expect(git.push).toHaveBeenCalledTimes(1)
