@@ -13,8 +13,6 @@ export type Inputs = {
   dryRun: boolean
 }
 
-
-
 export const handlePullRequestEvent = async (
   inputs: Inputs,
   context: Context<PullRequestEvent>,
