@@ -16,5 +16,3 @@ export const detectRepeatedCommits = async (headSHA: string) =>
       lastCommitMessages.every((message) => message.includes(`Auto-generated-by: update-generated-files-action;`))
     )
   })
-
-
