@@ -48,10 +48,9 @@ export const handleOtherEvent = async (inputs: Inputs, context: Context, octokit
 }
 
 const updateRefByFastForward = async (inputs: Inputs, context: Context): Promise<boolean> => {
-  const code = await git.push(
-    { localRef: `HEAD`, remoteRef: context.ref, dryRun: inputs.dryRun },
-    { ignoreReturnCode: true },
-  )
+  const code = await git.push({ localRef: `HEAD`, remoteRef: context.ref, dryRun: inputs.dryRun }, context, {
+    ignoreReturnCode: true,
+  })
   if (code !== 0) {
     core.info(`Failed to update ${context.ref} by fast-forward: git returned code ${code}`)
     return false
@@ -68,7 +67,7 @@ type PullRequest = {
 const createPull = async (inputs: Inputs, context: Context, octokit: Octokit): Promise<PullRequest> => {
   const headBranch = inputs.headBranch.replaceAll(/[^\w]/g, '-')
   core.info(`Creating a new branch ${headBranch}`)
-  await git.push({ localRef: `HEAD`, remoteRef: `refs/heads/${headBranch}`, dryRun: inputs.dryRun })
+  await git.push({ localRef: `HEAD`, remoteRef: `refs/heads/${headBranch}`, dryRun: inputs.dryRun }, context)
 
   const baseBranch = context.ref.replace(/^refs\/heads\//, '')
   core.info(`Creating a pull request for ${baseBranch} branch`)

@@ -28,7 +28,7 @@ export const handlePullRequestEvent = async (inputs: Inputs, context: Context<Pu
 
   const headRef = context.payload.pull_request.head.ref
   core.info(`Updating the head branch ${headRef}`)
-  await git.push({ localRef: `HEAD`, remoteRef: `refs/heads/${headRef}`, dryRun: inputs.dryRun })
+  await git.push({ localRef: `HEAD`, remoteRef: `refs/heads/${headRef}`, dryRun: inputs.dryRun }, context)
 
   if (context.payload.action === 'opened' || context.payload.action === 'synchronize') {
     // Fail if the head ref is outdated
@@ -52,7 +52,7 @@ const cherryPickWorkspaceChangesOntoMergeCommit = async (inputs: Inputs, context
   const headSHA = context.payload.pull_request.head.sha
   const baseSHA = parentSHAs.filter((sha) => sha !== headSHA).pop()
   assert(baseSHA !== undefined, `context.sha ${context.sha} must be a merge commit`)
-  await fetchCommitsBetweenBaseHead(baseSHA, headSHA)
+  await fetchCommitsBetweenBaseHead(baseSHA, headSHA, context)
 
   await git.checkout(headSHA)
   if (await git.tryCherryPick(workspaceChangeSHA)) {
@@ -71,12 +71,12 @@ const cherryPickWorkspaceChangesOntoMergeCommit = async (inputs: Inputs, context
   await git.cherryPick(workspaceChangeSHA)
 }
 
-const fetchCommitsBetweenBaseHead = async (baseSHA: string, headSHA: string) => {
+const fetchCommitsBetweenBaseHead = async (baseSHA: string, headSHA: string, context: Context) => {
   for (let depth = 50; depth < 1000; depth += 50) {
     if (await git.canMerge(baseSHA, headSHA)) {
       core.info(`Fetched commits required to merge base and head`)
       return
     }
-    await git.fetch({ refs: [baseSHA, headSHA], depth })
+    await git.fetch({ refs: [baseSHA, headSHA], depth }, context)
   }
 }
