@@ -1,5 +1,6 @@
-import { describe, expect, test } from 'vitest'
-import { parseParentsOfGitCatFile } from '../src/git.js'
+import type { WebhookEvent } from '@octokit/webhooks-types'
+import { describe, expect, it, test } from 'vitest'
+import { gitTokenConfigFlags, parseParentsOfGitCatFile } from '../src/git.js'
 
 describe('parseParentsOfGitCatFile', () => {
   test('merge commit', () => {
@@ -39,5 +40,28 @@ committer Example <example@example.com> 1681562385 +0900
 Dummy`,
     )
     expect(parents).toStrictEqual(['4d763299eef55d4b4285f5259876ff462b55017c'])
+  })
+})
+
+describe('gitTokenConfigFlags', () => {
+  it('returns the flags for GitHub', () => {
+    const githubContext = {
+      ref: 'refs/heads/main',
+      actor: 'octocat',
+      eventName: 'dummy',
+      sha: '0123456789abcdef',
+      repo: {
+        owner: 'int128',
+        repo: 'update-generated-files-action',
+      },
+      runId: 1234567890,
+      serverUrl: 'https://github.com',
+      payload: {} as WebhookEvent,
+    }
+    expect(gitTokenConfigFlags(githubContext)).toEqual([
+      '-c',
+      'http.https://github.com/.extraheader=',
+      '--config-env=http.https://github.com/.extraheader=CONFIG_VALUE_AUTHORIZATION_HEADER',
+    ])
   })
 })

@@ -1,5 +1,6 @@
 import * as core from '@actions/core'
 import * as exec from '@actions/exec'
+import type { Context } from './github.js'
 
 export const AUTHOR_NAME = 'update-generated-files-action'
 export const AUTHOR_EMAIL = '41898282+github-actions[bot]@users.noreply.github.com'
@@ -103,11 +104,11 @@ type FetchInput = {
   depth: number
 }
 
-export const fetch = async (input: FetchInput) =>
+export const fetch = async (input: FetchInput, context: Context) =>
   await exec.exec(
     'git',
     [
-      '--config-env=http.extraheader=CONFIG_GIT_HTTP_EXTRAHEADER',
+      ...gitTokenConfigFlags(context),
       'fetch',
       'origin',
       '--quiet',
@@ -117,7 +118,7 @@ export const fetch = async (input: FetchInput) =>
     {
       env: {
         ...process.env,
-        CONFIG_GIT_HTTP_EXTRAHEADER: authorizationHeader(),
+        CONFIG_VALUE_AUTHORIZATION_HEADER: authorizationHeader(),
       },
     },
   )
@@ -128,11 +129,11 @@ type PushInput = {
   dryRun: boolean
 }
 
-export const push = async (input: PushInput, options?: exec.ExecOptions) =>
+export const push = async (input: PushInput, context: Context, options?: exec.ExecOptions) =>
   await exec.exec(
     'git',
     [
-      '--config-env=http.extraheader=CONFIG_GIT_HTTP_EXTRAHEADER',
+      ...gitTokenConfigFlags(context),
       'push',
       'origin',
       '--quiet',
@@ -144,7 +145,7 @@ export const push = async (input: PushInput, options?: exec.ExecOptions) =>
       env: {
         ...process.env,
         ...options?.env,
-        CONFIG_GIT_HTTP_EXTRAHEADER: authorizationHeader(),
+        CONFIG_VALUE_AUTHORIZATION_HEADER: authorizationHeader(),
       },
     },
   )
@@ -152,14 +153,25 @@ export const push = async (input: PushInput, options?: exec.ExecOptions) =>
 export const deleteRef = async (ref: string) =>
   await exec.exec(
     'git',
-    ['--config-env=http.extraheader=CONFIG_GIT_HTTP_EXTRAHEADER', 'push', 'origin', '--quiet', '--delete', ref],
+    [...gitTokenConfigFlags(context), 'push', 'origin', '--quiet', '--delete', ref],
     {
       env: {
         ...process.env,
-        CONFIG_GIT_HTTP_EXTRAHEADER: authorizationHeader(),
+        CONFIG_VALUE_AUTHORIZATION_HEADER: authorizationHeader(),
       },
     },
   )
+
+export const gitTokenConfigFlags = (context: Context) => {
+  const origin = new URL(context.serverUrl).origin
+  return [
+    // Reset http.extraheader config set by actions/checkout
+    // https://github.com/actions/checkout/issues/162#issuecomment-590821598
+    `-c`,
+    `http.${origin}/.extraheader=`,
+    `--config-env=http.${origin}/.extraheader=CONFIG_VALUE_AUTHORIZATION_HEADER`,
+  ]
+}
 
 const authorizationHeader = () => {
   const credentials = Buffer.from(`x-access-token:${core.getInput('token')}`).toString('base64')
