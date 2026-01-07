@@ -15,7 +15,7 @@ describe('pull request event', () => {
     commitMessageFooter: '',
     dryRun: false,
   }
-  const context: Context<PullRequestEvent> = {
+  const githubContext: Context<PullRequestEvent> = {
     ref: 'refs/pull/1/merge',
     actor: 'octocat',
     eventName: 'pull_request',
@@ -47,7 +47,7 @@ describe('pull request event', () => {
     vi.mocked(git.canMerge).mockResolvedValueOnce(true)
     vi.mocked(git.getParentSHAs).mockResolvedValueOnce(['0123456789abcdef-latest-base', '0123456789abcdef-head'])
 
-    await handlePullRequestEvent(inputs, context)
+    await handlePullRequestEvent(inputs, githubContext)
 
     expect(git.checkout).toHaveBeenCalledWith('0123456789abcdef-head')
     expect(git.merge).toHaveBeenCalledWith('0123456789abcdef-latest-base', [
@@ -60,13 +60,16 @@ describe('pull request event', () => {
       `Auto-generated-by: update-generated-files-action; https://github.com/int128/update-generated-files-action/actions/runs/1234567890`,
     ])
     expect(git.push).toHaveBeenCalledTimes(1)
-    expect(git.push).toHaveBeenCalledWith({ localRef: `HEAD`, remoteRef: `refs/heads/topic`, dryRun: false })
+    expect(git.push).toHaveBeenCalledWith(
+      { localRef: `HEAD`, remoteRef: `refs/heads/topic`, dryRun: false },
+      githubContext,
+    )
   })
 
   test('checkout with head commit', async () => {
     vi.mocked(git.getCommitMessages).mockResolvedValue(['Commit message'])
     vi.mocked(git.getCurrentSHA).mockResolvedValue('0123456789abcdef-head')
-    await handlePullRequestEvent(inputs, context as Context<PullRequestEvent>)
+    await handlePullRequestEvent(inputs, githubContext as Context<PullRequestEvent>)
 
     expect(git.checkout).not.toHaveBeenCalled()
     expect(git.merge).not.toHaveBeenCalled()
@@ -76,6 +79,9 @@ describe('pull request event', () => {
       `Auto-generated-by: update-generated-files-action; https://github.com/int128/update-generated-files-action/actions/runs/1234567890`,
     ])
     expect(git.push).toHaveBeenCalledTimes(1)
-    expect(git.push).toHaveBeenCalledWith({ localRef: `HEAD`, remoteRef: `refs/heads/topic`, dryRun: false })
+    expect(git.push).toHaveBeenCalledWith(
+      { localRef: `HEAD`, remoteRef: `refs/heads/topic`, dryRun: false },
+      githubContext,
+    )
   })
 })
