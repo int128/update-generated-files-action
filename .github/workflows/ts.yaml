@@ -38,7 +38,7 @@ jobs:
         uses: ./
 
       - run: |
-          git config --local 'http.https://github.com/.extraheader=AUTHORIZATION: basic HOGE'
+          git config --local 'http.https://github.com/.extraheader' 'AUTHORIZATION: basic HOGE'
       - run: date > NOW.md
       - name: Run int128/update-generated-files (dry-run)
         uses: ./
