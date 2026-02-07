@@ -107,7 +107,14 @@ type FetchInput = {
 export const fetch = async (input: FetchInput, context: Context) =>
   await exec.exec(
     'git',
-    [...gitTokenConfigFlags(context), 'fetch', 'origin', '--quiet', `--depth=${input.depth}`, ...input.refs],
+    [
+      ...gitTokenConfigFlags(context),
+      'fetch',
+      'origin',
+      '--quiet',
+      `--deepen=${input.depth}`, // TODO
+      ...input.refs,
+    ],
     {
       env: {
         ...process.env,
@@ -138,6 +145,18 @@ export const push = async (input: PushInput, context: Context, options?: exec.Ex
       env: {
         ...process.env,
         ...options?.env,
+        CONFIG_VALUE_AUTHORIZATION_HEADER: authorizationHeader(),
+      },
+    },
+  )
+
+export const deleteRef = async (ref: string) =>
+  await exec.exec(
+    'git',
+    [...gitTokenConfigFlags(context), 'push', 'origin', '--quiet', '--delete', ref],
+    {
+      env: {
+        ...process.env,
         CONFIG_VALUE_AUTHORIZATION_HEADER: authorizationHeader(),
       },
     },
