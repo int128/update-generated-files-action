@@ -105,14 +105,7 @@ type FetchInput = {
 export const fetch = async (input: FetchInput, context: Context) =>
   await exec.exec(
     'git',
-    [
-      ...gitTokenConfigFlags(context),
-      'fetch',
-      'origin',
-      '--quiet',
-      `--depth=${input.depth}`,
-      ...input.refs,
-    ],
+    [...gitTokenConfigFlags(context), 'fetch', 'origin', '--quiet', `--depth=${input.depth}`, ...input.refs],
     {
       env: {
         ...process.env,
