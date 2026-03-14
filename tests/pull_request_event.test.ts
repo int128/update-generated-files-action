@@ -32,6 +32,7 @@ const octokitMock = {
 vi.mock('@actions/core')
 vi.mocked(core.group).mockImplementation(async (_, f) => await f())
 vi.mock('../src/git')
+vi.mock('../src/sign')
 
 describe('handlePullRequestEvent', () => {
   const inputs: Inputs = {
