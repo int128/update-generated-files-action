@@ -30,7 +30,7 @@ const octokitMock = {
 } as unknown as Octokit
 
 vi.mock('@actions/core')
-vi.mocked(core.info).mockImplementation(() => {})
+vi.mocked(core.group).mockImplementation(async (_, f) => await f())
 vi.mock('../src/git')
 
 describe('handlePullRequestEvent', () => {
