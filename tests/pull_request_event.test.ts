@@ -6,7 +6,7 @@ import type { Context } from '../src/github.js'
 import { handlePullRequestEvent, type Inputs } from '../src/pull_request_event.js'
 
 vi.mock('@actions/core')
-vi.mocked(core.info).mockImplementation(() => {})
+vi.mocked(core.group).mockImplementation(async (_, f) => await f())
 vi.mock('../src/git')
 
 describe('handlePullRequestEvent', () => {
