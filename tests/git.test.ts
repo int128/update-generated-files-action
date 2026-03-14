@@ -1,9 +1,9 @@
 import type { WebhookEvent } from '@octokit/webhooks-types'
-import { describe, expect, it, test } from 'vitest'
+import { describe, expect, it } from 'vitest'
 import { gitTokenConfigFlags, parseParentsOfGitCatFile } from '../src/git.js'
 
 describe('parseParentsOfGitCatFile', () => {
-  test('merge commit', () => {
+  it('parses the parents of a merge commit', () => {
     const parents = parseParentsOfGitCatFile(
       `tree a40f48872c3a8c3550e1d8a2a905ed2ab5b1c486
 parent c3a9301749696252fc2c2e5658d1e2e9170ca447
@@ -30,7 +30,7 @@ Merge b8499467560ea7c46fe4ed6837c264f4ad15fd8a into c3a9301749696252fc2c2e5658d1
     ])
   })
 
-  test('trivial commit', () => {
+  it('parses the parents of a trivial commit', () => {
     const parents = parseParentsOfGitCatFile(
       `tree 73825940c39e16906260090afe501bb82866d9ac
 parent 4d763299eef55d4b4285f5259876ff462b55017c
