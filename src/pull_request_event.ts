@@ -68,6 +68,8 @@ const cherryPickWorkspaceChangesOntoHead = async (
   core.info(`Cherry-pick the workspace changes onto the head branch`)
   await git.checkout(headSHA)
 
+
+
   // TODO: uncomment
   // if (await git.tryCherryPick(workspaceChangeSHA)) {
   //   await signCurrentCommit(context, octokit)
