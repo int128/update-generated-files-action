@@ -26,7 +26,7 @@ export const signCurrentCommit = async (context: Context, octokit: Octokit) => {
       sha: signedCommit.sha,
       force: true,
     })
-    await git.fetch({ refs: [signedCommit.sha], depth: 1 }, context)
+    await git.fetch({ refs: [signedCommit.sha], depth: 2 }, context)
     await git.checkout(signedCommit.sha)
   } finally {
     await git.deleteRef(`refs/heads/${signingBranch}`, context)
