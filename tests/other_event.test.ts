@@ -1,3 +1,4 @@
+import * as core from '@actions/core'
 import type { Octokit } from '@octokit/action'
 import type { WebhookEvent } from '@octokit/webhooks-types'
 import { describe, expect, it, vi } from 'vitest'
@@ -18,6 +19,7 @@ const octokitMock = {
 }
 
 vi.mock('@actions/core')
+vi.mocked(core.group).mockImplementation(async (_, f) => await f())
 vi.mock('../src/git')
 
 describe('handleOtherEvent', () => {
