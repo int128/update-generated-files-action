@@ -110,7 +110,7 @@ export const fetch = async (input: FetchInput, context: Context) =>
       'fetch',
       'origin',
       '--quiet',
-      `--deepen=${input.depth}`, // TODO
+      `--depth=${input.depth}`,
       ...input.refs,
     ],
     {
