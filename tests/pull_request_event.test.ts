@@ -9,7 +9,7 @@ vi.mock('@actions/core')
 vi.mocked(core.info).mockImplementation(() => {})
 vi.mock('../src/git')
 
-describe('pull request event', () => {
+describe('handlePullRequestEvent', () => {
   const inputs: Inputs = {
     commitMessage: 'Autofix (workflow / job)',
     commitMessageFooter: '',
@@ -52,6 +52,8 @@ describe('pull request event', () => {
     expect(git.checkout).toHaveBeenCalledWith('0123456789abcdef-head')
     expect(git.merge).toHaveBeenCalledWith('0123456789abcdef-latest-base', [
       `Merge branch 'main' into topic`,
+      `Base-branch: main@0123456789abcdef-latest-base`,
+      `Head-branch: topic@0123456789abcdef-head`,
       `Auto-generated-by: update-generated-files-action; https://github.com/int128/update-generated-files-action/actions/runs/1234567890`,
     ])
     expect(git.commit).toHaveBeenCalledWith([
