@@ -65,7 +65,7 @@ describe('handlePullRequestEvent', () => {
       )
     })
 
-    it('falls back to cherry-pick the workspace changes onto the merge commit', async () => {
+    it('falls back to update the head branch and then cherry-pick the workspace changes onto it', async () => {
       vi.mocked(git.getCommitMessages).mockResolvedValue(['Commit message'])
       vi.mocked(git.getCurrentSHA).mockResolvedValue('0123456789abcdef-merge')
       vi.mocked(git.canMerge).mockResolvedValueOnce(false)

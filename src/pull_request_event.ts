@@ -62,7 +62,7 @@ const cherryPickWorkspaceChangesOntoHead = async (inputs: Inputs, context: Conte
     return
   }
 
-  core.info(`Falling back to cherry-pick the workspace changes onto the merge commit`)
+  core.info(`Falling back to update the head branch and then cherry-pick the workspace changes onto it`)
   await git.checkout(headSHA)
   const headRef = context.payload.pull_request.head.ref
   const baseRef = context.payload.pull_request.base.ref
