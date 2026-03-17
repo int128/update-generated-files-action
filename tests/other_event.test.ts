@@ -85,6 +85,7 @@ describe('handleOtherEvent', () => {
     octokitMock.rest.pulls.create.mockResolvedValueOnce({
       data: {
         number: 987,
+        node_id: 'PR_987',
         html_url: 'https://github.com/int128/update-generated-files-action/pulls/987',
         base: {
           repo: {
@@ -127,6 +128,7 @@ describe('handleOtherEvent', () => {
       error: undefined,
       pullRequestUrl: 'https://github.com/int128/update-generated-files-action/pulls/987',
       pullRequestNumber: 987,
+      pullRequestId: 'PR_987',
     })
     expect(git.commit).toHaveBeenCalledTimes(1)
     expect(git.commit).toHaveBeenCalledWith([

@@ -22,6 +22,7 @@ export type Outputs = {
   error?: Error
 
   pullRequestUrl?: string
+  pullRequestId?: string
   pullRequestNumber?: number
 }
 

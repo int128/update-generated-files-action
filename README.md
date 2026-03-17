@@ -159,10 +159,11 @@ If the last 5 commits were committed by this action, it stops with an error to p
 
 ### Outputs
 
-| Name                  | Description                           |
-| --------------------- | ------------------------------------- |
-| `pull-request-number` | Number of pull request <sup>\*1</sup> |
-| `pull-request-url`    | URL of pull request <sup>\*1</sup>    |
+| Name                  | Description                            |
+| --------------------- | -------------------------------------- |
+| `pull-request-number` | Number of pull request <sup>\*1</sup>  |
+| `pull-request-id`     | Node ID of pull request <sup>\*1</sup> |
+| `pull-request-url`    | URL of pull request <sup>\*1</sup>     |
 
 <sup>\*1</sup>: Available only when this action created a pull request.
 
