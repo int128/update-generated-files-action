@@ -146,16 +146,19 @@ If the last 5 commits were committed by this action, it stops with an error to p
 
 ### Inputs
 
-| Name             | Default                    | Description                                        |
-| ---------------- | -------------------------- | -------------------------------------------------- |
-| `commit-message` | [action.yaml](action.yaml) | Commit message                                     |
-| `title`          | [action.yaml](action.yaml) | Title of the pull request                          |
-| `body`           | [action.yaml](action.yaml) | Body of the pull request                           |
-| `draft`          | false                      | If true, create a draft pull request               |
-| `reviewers`      | (optional)                 | Request reviewers for the pull request (multiline) |
-| `labels`         | (optional)                 | Add labels to the pull request (multiline)         |
-| `dry-run`        | false                      | If true, do not push the changes                   |
-| `token`          | `github.token`             | GitHub token                                       |
+| Name               | Default        | Description                                              |
+| ------------------ | -------------- | -------------------------------------------------------- |
+| `commit-message`   | \*1            | Commit message                                           |
+| `head-branch-keys` | \*1            | Keys of the head branch name of a pull request to create |
+| `title`            | \*1            | Title of the pull request                                |
+| `body`             | \*1            | Body of the pull request                                 |
+| `draft`            | false          | If true, create a draft pull request                     |
+| `reviewers`        | (optional)     | Request reviewers for the pull request (multiline)       |
+| `labels`           | (optional)     | Add labels to the pull request (multiline)               |
+| `dry-run`          | false          | If true, do not push the changes                         |
+| `token`            | `github.token` | GitHub token                                             |
+
+\*1: See [action.yaml](action.yaml) for the default value.
 
 ### Outputs
 
