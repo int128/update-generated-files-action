@@ -7,7 +7,7 @@ const main = async (): Promise<void> => {
     {
       commitMessage: core.getInput('commit-message', { required: true }),
       commitMessageFooter: core.getInput('commit-message-footer'),
-      headBranch: core.getInput('head-branch', { required: true }),
+      headBranchKeys: core.getMultilineInput('head-branch-keys', { required: true }),
       title: core.getInput('title', { required: true }),
       body: core.getInput('body', { required: true }),
       draft: core.getBooleanInput('draft', { required: true }),

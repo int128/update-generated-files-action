@@ -8,7 +8,7 @@ import { handlePullRequestEvent } from './pull_request_event.js'
 export type Inputs = {
   commitMessage: string
   commitMessageFooter: string
-  headBranch: string
+  headBranchKeys: string[]
   title: string
   body: string
   draft: boolean

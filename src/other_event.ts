@@ -73,7 +73,7 @@ type PullRequest = {
 }
 
 const createPull = async (inputs: Inputs, context: Context, octokit: Octokit): Promise<PullRequest> => {
-  const headBranch = inputs.headBranch.replaceAll(/[^\w]/g, '-')
+  const headBranch = `update-generated-files--${inputs.headBranchKeys.join('--').replaceAll(/[^\w]/g, '-')}`
   core.info(`Creating a new branch ${headBranch}`)
   await git.push({ localRef: `HEAD`, remoteRef: `refs/heads/${headBranch}`, dryRun: inputs.dryRun }, context)
 
