@@ -21,6 +21,9 @@ const main = async (): Promise<void> => {
   if (outputs.pullRequestUrl) {
     core.setOutput('pull-request-url', outputs.pullRequestUrl)
   }
+  if (outputs.pullRequestId) {
+    core.setOutput('pull-request-id', outputs.pullRequestId)
+  }
   if (outputs.pullRequestNumber) {
     core.setOutput('pull-request-number', outputs.pullRequestNumber)
   }

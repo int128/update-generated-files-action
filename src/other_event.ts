@@ -49,6 +49,7 @@ export const handleOtherEvent = async (inputs: Inputs, context: Context, octokit
         ? new Error(`Please merge ${pull.html_url} to follow up the generated files`)
         : undefined,
     pullRequestUrl: pull.html_url,
+    pullRequestId: pull.node_id,
     pullRequestNumber: pull.number,
   }
 }
@@ -68,6 +69,7 @@ const updateRefByFastForward = async (inputs: Inputs, context: Context): Promise
 type PullRequest = {
   html_url: string
   number: number
+  node_id: string
 }
 
 const createPull = async (inputs: Inputs, context: Context, octokit: Octokit): Promise<PullRequest> => {
@@ -82,6 +84,7 @@ const createPull = async (inputs: Inputs, context: Context, octokit: Octokit): P
     return {
       html_url: `https://example.com/${context.repo.owner}/${context.repo.repo}/pull/-1`,
       number: -1,
+      node_id: `PR_dummy`,
     }
   }
   const { data: pull } = await octokit.rest.pulls.create({

@@ -50,6 +50,8 @@ inputs:
 outputs:
   pull-request-url:
     description: URL of pull request, if created
+  pull-request-id:
+    description: Node ID of pull request, if created
   pull-request-number:
     description: Number of pull request, if created
 
