@@ -37,7 +37,7 @@ export const handleOtherEvent = async (inputs: Inputs, context: Context, octokit
   }
 
   const pull = await core.group(`Falling back to create a pull request to follow up`, async () => {
-    return await createPull(inputs, context, octokit)
+    return await createOrUpdatePull(inputs, context, octokit)
   })
   core.summary.addHeading(`Created a pull request: ${inputs.title}`)
   core.summary.addLink(pull.html_url, pull.html_url)
@@ -72,12 +72,30 @@ type PullRequest = {
   node_id: string
 }
 
-const createPull = async (inputs: Inputs, context: Context, octokit: Octokit): Promise<PullRequest> => {
+const createOrUpdatePull = async (inputs: Inputs, context: Context, octokit: Octokit): Promise<PullRequest> => {
   const headBranch = `update-generated-files--${inputs.headBranchKeys.join('--').replaceAll(/[^\w]/g, '-')}`
   core.info(`Creating a new branch ${headBranch}`)
   await git.push({ localRef: `HEAD`, remoteRef: `refs/heads/${headBranch}`, dryRun: inputs.dryRun }, context)
 
   const baseBranch = context.ref.replace(/^refs\/heads\//, '')
+
+  core.info(`Checking if there is an existing pull request for ${headBranch} branch`)
+  const { data: existingPulls } = await octokit.rest.pulls.list({
+    owner: context.repo.owner,
+    repo: context.repo.repo,
+    head: `${context.repo.owner}:${headBranch}`,
+    base: baseBranch,
+    state: 'open',
+    per_page: 1,
+  })
+  if (existingPulls.length > 0) {
+    const existingPull = existingPulls[0]
+    core.info(`There is an existing pull request ${existingPull.html_url}`)
+    await requestReviewers(inputs.reviewers, existingPull.number, context, octokit)
+    await addLabels(inputs.labels, existingPull.number, context, octokit)
+    return existingPull
+  }
+
   core.info(`Creating a pull request for ${baseBranch} branch`)
   if (inputs.dryRun) {
     core.warning(`[dry-run] Created a pull request`)
@@ -88,7 +106,8 @@ const createPull = async (inputs: Inputs, context: Context, octokit: Octokit): P
     }
   }
   const { data: pull } = await octokit.rest.pulls.create({
-    ...context.repo,
+    owner: context.repo.owner,
+    repo: context.repo.repo,
     base: baseBranch,
     head: headBranch,
     title: inputs.title,
@@ -111,7 +130,8 @@ const requestReviewers = async (reviewers: string[], pullNumber: number, context
   core.info(`Requesting a review to users (${users.join(', ')}) and teams (${teams.join(', ')})`)
   const requestReviewersResponse = await catchRequestError(() =>
     octokit.rest.pulls.requestReviewers({
-      ...context.repo,
+      owner: context.repo.owner,
+      repo: context.repo.repo,
       pull_number: pullNumber,
       reviewers: users,
       team_reviewers: teams,
@@ -141,7 +161,8 @@ const requestReviewToActor = async (pullNumber: number, context: Context, octoki
   core.info(`Adding the actor @${context.actor} to assignees`)
   const addAssigneesResponse = await catchRequestError(() =>
     octokit.rest.issues.addAssignees({
-      ...context.repo,
+      owner: context.repo.owner,
+      repo: context.repo.repo,
       issue_number: pullNumber,
       assignees: [context.actor],
     }),
@@ -158,7 +179,8 @@ const addLabels = async (labels: string[], pullNumber: number, context: Context,
   core.info(`Adding labels ${labels.join(', ')} to pull request #${pullNumber}`)
   const addLabelsResponse = await catchRequestError(() =>
     octokit.rest.issues.addLabels({
-      ...context.repo,
+      owner: context.repo.owner,
+      repo: context.repo.repo,
       issue_number: pullNumber,
       labels: labels,
     }),
