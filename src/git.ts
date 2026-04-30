@@ -143,6 +143,14 @@ export const push = async (input: PushInput, context: Context, options?: exec.Ex
     },
   )
 
+export const deleteRef = async (ref: string, context: Context) =>
+  await exec.exec('git', [...gitTokenConfigFlags(context), 'push', 'origin', '--quiet', '--delete', ref], {
+    env: {
+      ...process.env,
+      CONFIG_VALUE_AUTHORIZATION_HEADER: authorizationHeader(),
+    },
+  })
+
 export const gitTokenConfigFlags = (context: Context) => {
   const origin = new URL(context.serverUrl).origin
   return [
