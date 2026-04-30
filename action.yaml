@@ -10,10 +10,14 @@ inputs:
     description: Footer of commit message
     required: false
     deprecationMessage: Use commit-message instead
-  head-branch:
-    description: (For internal) Head branch of a pull request to create. Non-alphanumeric characters will be escaped.
+  head-branch-keys:
+    description: Keys of the head branch name of a pull request to create
     required: true
-    default: update-generated-files--${{ github.workflow }}--${{ github.run_number }}--${{ github.job }}--${{ strategy.job-index }}
+    default: |
+      ${{ github.workflow }}
+      ${{ github.run_number }}
+      ${{ github.job }}
+      ${{ strategy.job-index }}
   title:
     description: title of pull request
     required: true
@@ -46,6 +50,8 @@ inputs:
 outputs:
   pull-request-url:
     description: URL of pull request, if created
+  pull-request-id:
+    description: Node ID of pull request, if created
   pull-request-number:
     description: Number of pull request, if created
 

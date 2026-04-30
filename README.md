@@ -74,11 +74,14 @@ When this action is triggered on other events such as `push` or `schedule`,
 it tries to apply the change by the following order:
 
 1. Push the change into the branch by fast-forward.
-2. Create a pull request for the branch.
+2. Create a pull request for the branch. If the pull request already exists, update it.
 
 For example, when this action is triggered on `push` event to `main` branch,
 it pushes a new commit to `main` branch.
-If it could not push it due to the branch rule, it creates a new pull request.
+If it fails due to the branch rule, it creates a new pull request.
+
+This action creates a new pull request every time by default.
+If you want to create or update a pull request for each workflow, you can set `head-branch-keys` input.
 
 This action requests a review to the current actor by default.
 If `reviewers` input is set, it requests a review to the specified users or teams.
@@ -146,23 +149,27 @@ If the last 5 commits were committed by this action, it stops with an error to p
 
 ### Inputs
 
-| Name             | Default                    | Description                                        |
-| ---------------- | -------------------------- | -------------------------------------------------- |
-| `commit-message` | [action.yaml](action.yaml) | Commit message                                     |
-| `title`          | [action.yaml](action.yaml) | Title of the pull request                          |
-| `body`           | [action.yaml](action.yaml) | Body of the pull request                           |
-| `draft`          | false                      | If true, create a draft pull request               |
-| `reviewers`      | (optional)                 | Request reviewers for the pull request (multiline) |
-| `labels`         | (optional)                 | Add labels to the pull request (multiline)         |
-| `dry-run`        | false                      | If true, do not push the changes                   |
-| `token`          | `github.token`             | GitHub token                                       |
+| Name               | Default        | Description                                              |
+| ------------------ | -------------- | -------------------------------------------------------- |
+| `commit-message`   | \*1            | Commit message                                           |
+| `head-branch-keys` | \*1            | Keys of the head branch name of a pull request to create |
+| `title`            | \*1            | Title of the pull request                                |
+| `body`             | \*1            | Body of the pull request                                 |
+| `draft`            | false          | If true, create a draft pull request                     |
+| `reviewers`        | (optional)     | Request reviewers for the pull request (multiline)       |
+| `labels`           | (optional)     | Add labels to the pull request (multiline)               |
+| `dry-run`          | false          | If true, do not push the changes                         |
+| `token`            | `github.token` | GitHub token                                             |
+
+\*1: See [action.yaml](action.yaml) for the default value.
 
 ### Outputs
 
-| Name                  | Description                           |
-| --------------------- | ------------------------------------- |
-| `pull-request-number` | Number of pull request <sup>\*1</sup> |
-| `pull-request-url`    | URL of pull request <sup>\*1</sup>    |
+| Name                  | Description                            |
+| --------------------- | -------------------------------------- |
+| `pull-request-number` | Number of pull request <sup>\*1</sup>  |
+| `pull-request-id`     | Node ID of pull request <sup>\*1</sup> |
+| `pull-request-url`    | URL of pull request <sup>\*1</sup>     |
 
 <sup>\*1</sup>: Available only when this action created a pull request.
 
