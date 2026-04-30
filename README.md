@@ -74,11 +74,14 @@ When this action is triggered on other events such as `push` or `schedule`,
 it tries to apply the change by the following order:
 
 1. Push the change into the branch by fast-forward.
-2. Create a pull request for the branch.
+2. Create a pull request for the branch. If the pull request already exists, update it.
 
 For example, when this action is triggered on `push` event to `main` branch,
 it pushes a new commit to `main` branch.
-If it could not push it due to the branch rule, it creates a new pull request.
+If it fails due to the branch rule, it creates a new pull request.
+
+This action creates a new pull request every time by default.
+If you want to create or update a pull request for each workflow, you can set `head-branch-keys` input.
 
 This action requests a review to the current actor by default.
 If `reviewers` input is set, it requests a review to the specified users or teams.
