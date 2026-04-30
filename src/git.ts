@@ -117,6 +117,7 @@ export const fetch = async (input: FetchInput, context: Context) =>
 type PushInput = {
   localRef: string
   remoteRef: string
+  force?: boolean
   dryRun: boolean
 }
 
@@ -128,6 +129,7 @@ export const push = async (input: PushInput, context: Context, options?: exec.Ex
       'push',
       'origin',
       '--quiet',
+      ...(input.force ? ['--force'] : []),
       ...(input.dryRun ? ['--dry-run'] : []),
       `${input.localRef}:${input.remoteRef}`,
     ],
