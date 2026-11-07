@@ -11,11 +11,11 @@ inputs:
     required: false
     deprecationMessage: Use commit-message instead
   head-branch-prefix:
-    description: Prefix of the head branch name of a pull request to create
+    description: Prefix of the head branch name of a pull request to create (non-pull-request events only)
     required: true
     default: update-generated-files--
   head-branch-keys:
-    description: Keys of the head branch name of a pull request to create
+    description: Keys of the head branch name of a pull request to create (non-pull-request events only)
     required: true
     default: |
       ${{ github.workflow }}
@@ -23,31 +23,39 @@ inputs:
       ${{ github.job }}
       ${{ strategy.job-index }}
   title:
-    description: title of pull request
+    description: title of pull request (non-pull-request events only)
     required: true
     default: Autofix by GitHub Actions (${{ github.workflow }} / ${{ github.job }})
   body:
-    description: body of pull request
+    description: body of pull request (non-pull-request events only)
     required: true
     default: |
       GitHub Actions automatically updated the files by the workflow ${{ github.workflow }} / job ${{ github.job }}.
       @${{ github.actor }}
   draft:
-    description: If true, create a draft pull request
+    description: If true, create a draft pull request (non-pull-request events only)
     required: false
     default: 'false'
   reviewers:
-    description: reviewers of pull request (multiline)
+    description: reviewers of pull request (multiline, non-pull-request events only)
     required: false
   labels:
-    description: labels of pull request (multiline)
+    description: labels of pull request (multiline, non-pull-request events only)
     required: false
+  enable-auto-merge:
+    description: If true, enable auto-merge on the pull request (non-pull-request events only)
+    required: false
+    default: 'false'
+  auto-merge-method:
+    description: Merge method of auto-merge (merge, squash or rebase) (non-pull-request events only)
+    required: false
+    default: squash
   dry-run:
     description: If true, do not push the changes
     required: false
     default: 'false'
   token:
-    description: GitHub token to create a pull request
+    description: GitHub token
     required: true
     default: ${{ github.token }}
 

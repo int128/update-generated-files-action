@@ -109,6 +109,9 @@ jobs:
             updated-graphql-codegen
           # Set a custom message to the new commit (optional)
           commit-message: "fix: graphql-codegen"
+          # Enable auto-merge for the pull request (optional)
+          enable-auto-merge: true
+          auto-merge-method: squash
 ```
 
 ## Best practices
@@ -189,18 +192,14 @@ jobs:
         with:
           token: ${{ steps.auto-merge-token.outputs.token }}
           head-branch-prefix: auto-merge/
-      - if: steps.update-generated-files.outputs.pull-request-url != ''
-        run: gh pr merge --auto --squash "$PULL_REQUEST_URL"
-        env:
-          GH_TOKEN: ${{ steps.auto-merge-token.outputs.token }}
-          PULL_REQUEST_URL: ${{ steps.update-generated-files.outputs.pull-request-url }}
+          enable-auto-merge: true
+          auto-merge-method: squash
 ```
 
-Enable auto-merge with the token of the GitHub App.
+This action enables auto-merge with the token of the GitHub App.
 A pull request is merged by the user who enabled auto-merge.
-
-This action exits with an error on `push` event after creating a pull request.
-Use `schedule` or `workflow_dispatch` event for auto-merge.
+Auto-merge requires "Allow auto-merge" in the repository settings and the required status checks.
+If this action could not enable auto-merge, it shows a warning and continues.
 
 ## Specification
 
@@ -208,20 +207,31 @@ If the last 5 commits were committed by this action, it stops with an error to p
 
 ### Inputs
 
+These inputs are available on all events.
+
+| Name             | Default        | Description                      |
+| ---------------- | -------------- | -------------------------------- |
+| `commit-message` | \*1            | Commit message                   |
+| `dry-run`        | false          | If true, do not push the changes |
+| `token`          | `github.token` | GitHub token                     |
+
+These inputs are available only on other events (not `pull_request` event),
+because this action creates a pull request only on other events.
+
 | Name                 | Default                    | Description                                                |
 | -------------------- | -------------------------- | ---------------------------------------------------------- |
-| `commit-message`     | \*1                        | Commit message                                             |
 | `head-branch-prefix` | `update-generated-files--` | Prefix of the head branch name of a pull request to create |
 | `head-branch-keys`   | \*1                        | Keys of the head branch name of a pull request to create   |
 | `title`              | \*1                        | Title of the pull request                                  |
 | `body`               | \*1                        | Body of the pull request                                   |
-| `draft`              | false                      | If true, create a draft pull request                       |
+| `draft`              | false                      | If true, create a draft pull request \*2                   |
 | `reviewers`          | (optional)                 | Request reviewers for the pull request (multiline)         |
 | `labels`             | (optional)                 | Add labels to the pull request (multiline)                 |
-| `dry-run`            | false                      | If true, do not push the changes                           |
-| `token`              | `github.token`             | GitHub token                                               |
+| `enable-auto-merge`  | false                      | If true, enable auto-merge on the pull request \*2         |
+| `auto-merge-method`  | `squash`                   | Merge method of auto-merge (`merge`, `squash` or `rebase`) |
 
 \*1: See [action.yaml](action.yaml) for the default value.
+\*2: Do not set both `draft` and `enable-auto-merge`.
 
 ### Outputs
 
@@ -231,7 +241,7 @@ If the last 5 commits were committed by this action, it stops with an error to p
 | `pull-request-id`     | Node ID of pull request <sup>\*1</sup> |
 | `pull-request-url`    | URL of pull request <sup>\*1</sup>     |
 
-<sup>\*1</sup>: Available only when this action created a pull request.
+<sup>\*1</sup>: Available only when this action created a pull request on other events.
 
 ### Exit status
 

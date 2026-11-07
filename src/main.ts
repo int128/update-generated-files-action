@@ -1,4 +1,5 @@
 import * as core from '@actions/core'
+import { parseAutoMerge } from './auto_merge.js'
 import { getContext, getOctokit } from './github.js'
 import { run } from './run.js'
 
@@ -14,6 +15,10 @@ const main = async (): Promise<void> => {
       draft: core.getBooleanInput('draft', { required: true }),
       reviewers: core.getMultilineInput('reviewers'),
       labels: core.getMultilineInput('labels'),
+      autoMerge: parseAutoMerge(
+        core.getBooleanInput('enable-auto-merge'),
+        core.getInput('auto-merge-method', { required: true }),
+      ),
       dryRun: core.getBooleanInput('dry-run'),
     },
     await getContext(),
