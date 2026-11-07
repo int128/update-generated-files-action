@@ -9,6 +9,7 @@ import { signCurrentCommit } from './sign.js'
 type Inputs = {
   commitMessage: string
   commitMessageFooter: string
+  headBranchPrefix: string
   headBranchKeys: string[]
   title: string
   body: string
@@ -86,10 +87,11 @@ type PullRequest = {
   node_id: string
 }
 
+export const getHeadBranch = (inputs: Pick<Inputs, 'headBranchPrefix' | 'headBranchKeys'>): string =>
+  inputs.headBranchPrefix + inputs.headBranchKeys.map((key) => key.replaceAll(/[^\w]/g, '-')).join('--')
+
 const createOrUpdatePull = async (inputs: Inputs, context: Context, octokit: Octokit): Promise<PullRequest> => {
-  const headBranch = ['update-generated-files', ...inputs.headBranchKeys]
-    .map((key) => key.replaceAll(/[^\w]/g, '-'))
-    .join('--')
+  const headBranch = getHeadBranch(inputs)
   core.info(`Pushing a branch ${headBranch}`)
   await git.push(
     {
