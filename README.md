@@ -143,23 +143,83 @@ You can update both dependencies and generated files as follows:
    It intentionally exits with the error to prevent auto-merging.
 1. GitHub Actions triggers the workflow against the new commit.
 
+### Auto-merge a pull request securely
+
+You can merge a pull request created by this action without human approval.
+For example, a scheduled workflow updates a file and the pull request is merged automatically.
+
+To do this securely, set up a dedicated GitHub App and repository rulesets as follows:
+
+- Restrict the credentials of the GitHub App to the default branch.
+  This ensures that only the reviewed code can issue the token of the GitHub App.
+  For example,
+  - Store the credentials into the secrets of an environment, and restrict the deployment branches of the environment.
+  - Store the credentials into a cloud secret manager, and restrict the access by the OIDC token of GitHub Actions,
+    such as `repo:OWNER/REPO:ref:refs/heads/main`.
+- Create the head branch with a dedicated prefix, such as `auto-merge/`.
+- Add a ruleset to restrict creation and update of `auto-merge/**` branches.
+  Add the GitHub App to the bypass list.
+  This ensures that nobody else can push a commit to the pull request.
+- Put the pull request approval rule into a separate ruleset.
+  Add the GitHub App to the bypass list with the `exempt` mode.
+  If you choose the `always` mode, auto-merge waits for an approval.
+- Keep the required status checks without bypass.
+
+Here is an example workflow using an environment.
+
+```yaml
+on:
+  schedule:
+    - cron: "0 0 * * 1"
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    environment: auto-merge
+    steps:
+      - uses: actions/checkout@v5
+      - run: ./update-something.sh
+      - id: auto-merge-token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ secrets.AUTO_MERGE_APP_ID }}
+          private-key: ${{ secrets.AUTO_MERGE_APP_PRIVATE_KEY }}
+      - id: update-generated-files
+        uses: int128/update-generated-files-action@v2
+        with:
+          token: ${{ steps.auto-merge-token.outputs.token }}
+          head-branch-prefix: auto-merge/
+      - if: steps.update-generated-files.outputs.pull-request-url != ''
+        run: gh pr merge --auto --squash "$PULL_REQUEST_URL"
+        env:
+          GH_TOKEN: ${{ steps.auto-merge-token.outputs.token }}
+          PULL_REQUEST_URL: ${{ steps.update-generated-files.outputs.pull-request-url }}
+```
+
+Enable auto-merge with the token of the GitHub App.
+A pull request is merged by the user who enabled auto-merge.
+
+This action exits with an error on `push` event after creating a pull request.
+Use `schedule` or `workflow_dispatch` event for auto-merge.
+
 ## Specification
 
 If the last 5 commits were committed by this action, it stops with an error to prevent an infinite loop.
 
 ### Inputs
 
-| Name               | Default        | Description                                              |
-| ------------------ | -------------- | -------------------------------------------------------- |
-| `commit-message`   | \*1            | Commit message                                           |
-| `head-branch-keys` | \*1            | Keys of the head branch name of a pull request to create |
-| `title`            | \*1            | Title of the pull request                                |
-| `body`             | \*1            | Body of the pull request                                 |
-| `draft`            | false          | If true, create a draft pull request                     |
-| `reviewers`        | (optional)     | Request reviewers for the pull request (multiline)       |
-| `labels`           | (optional)     | Add labels to the pull request (multiline)               |
-| `dry-run`          | false          | If true, do not push the changes                         |
-| `token`            | `github.token` | GitHub token                                             |
+| Name                 | Default                    | Description                                                |
+| -------------------- | -------------------------- | ---------------------------------------------------------- |
+| `commit-message`     | \*1                        | Commit message                                             |
+| `head-branch-prefix` | `update-generated-files--` | Prefix of the head branch name of a pull request to create |
+| `head-branch-keys`   | \*1                        | Keys of the head branch name of a pull request to create   |
+| `title`              | \*1                        | Title of the pull request                                  |
+| `body`               | \*1                        | Body of the pull request                                   |
+| `draft`              | false                      | If true, create a draft pull request                       |
+| `reviewers`          | (optional)                 | Request reviewers for the pull request (multiline)         |
+| `labels`             | (optional)                 | Add labels to the pull request (multiline)                 |
+| `dry-run`            | false                      | If true, do not push the changes                           |
+| `token`              | `github.token`             | GitHub token                                               |
 
 \*1: See [action.yaml](action.yaml) for the default value.
 
