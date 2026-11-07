@@ -5,8 +5,8 @@ on:
     paths:
       - src/**
       - tests/**
-      - '*.json'
-      - '*.yaml'
+      - "*.json"
+      - "*.yaml"
       - .github/workflows/ts.yaml
   push:
     branches:
@@ -14,8 +14,8 @@ on:
     paths:
       - src/**
       - tests/**
-      - '*.json'
-      - '*.yaml'
+      - "*.json"
+      - "*.yaml"
       - .github/workflows/ts.yaml
 
 jobs:
