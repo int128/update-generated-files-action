@@ -231,6 +231,7 @@ because this action creates a pull request only on other events.
 | `auto-merge-method`  | `squash`                   | Merge method of auto-merge (`merge`, `squash` or `rebase`) |
 
 \*1: See [action.yaml](action.yaml) for the default value.
+
 \*2: Do not set both `draft` and `enable-auto-merge`.
 
 ### Outputs
